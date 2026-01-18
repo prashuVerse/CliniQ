@@ -1,65 +1,92 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ShieldAlert, FileText, BrainCircuit, Stethoscope, Lock, ArrowRight, User } from "lucide-react";
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen flex flex-col font-sans">
+      {/* Navbar */}
+      <nav className="fixed w-full z-50 glass-panel">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 font-bold text-xl text-slate-800">
+            <div className="bg-blue-600 p-1.5 rounded-lg">
+              <BrainCircuit className="text-white h-5 w-5" />
+            </div>
+            VitalSync
+          </div>
+          <div className="flex gap-4">
+            <Link href="/dashboard" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition">Log In</Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <main className="flex-1 pt-32 pb-16 px-6">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-sm font-semibold">
+            <Lock className="w-3 h-3" /> Secure • Patient-Owned • AI-Powered
+          </div>
+          
+          <h1 className="text-5xl md:text-7xl font-bold text-slate-900 tracking-tight leading-[1.1]">
+            Medical context, <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
+              when it matters most.
+            </span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            VitalSync uses local AI to transform your fragmented PDF records into a structured clinical timeline for doctors and emergency responders.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Role Selection Cards */}
+        <div className="max-w-5xl mx-auto mt-16 grid md:grid-cols-3 gap-6">
+          
+          {/* Patient Card */}
+          <Link href="/dashboard" className="clinical-card p-8 hover:border-blue-400 group relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+            <div className="h-12 w-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-4 group-hover:scale-110 transition">
+              <User size={24} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800">Patient Access</h3>
+            <p className="text-slate-500 mt-2 text-sm">Upload records, manage consent, and view your synthesized timeline.</p>
+            <div className="mt-4 flex items-center text-blue-600 text-sm font-semibold">
+              Enter Dashboard <ArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </Link>
+
+          {/* Doctor Card */}
+          <div className="clinical-card p-8 hover:border-green-400 group relative overflow-hidden cursor-pointer">
+            <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
+            <div className="h-12 w-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-4 group-hover:scale-110 transition">
+              <Stethoscope size={24} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800">Doctor View</h3>
+            <p className="text-slate-500 mt-2 text-sm">Request patient consent via ABHA ID to view clinical summaries.</p>
+            <div className="mt-4 flex items-center text-green-600 text-sm font-semibold">
+              Request Access <ArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </div>
+
+          {/* Emergency Card */}
+          <Link href="/emergency" className="clinical-card p-8 bg-red-50/50 hover:bg-red-50 border-red-100 hover:border-red-400 group relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+            <div className="h-12 w-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600 mb-4 group-hover:scale-110 transition">
+              <ShieldAlert size={24} />
+            </div>
+            <h3 className="text-xl font-bold text-red-900">Emergency Mode</h3>
+            <p className="text-red-700/70 mt-2 text-sm">Scan QR or enter emergency token for life-saving allergies & blood data.</p>
+            <div className="mt-4 flex items-center text-red-700 text-sm font-semibold">
+              Access Now <ArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </Link>
+
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="py-8 text-center text-slate-400 text-sm border-t border-slate-200 bg-white">
+        © 2024 VitalSync AI. Not for diagnostic use.
+      </footer>
     </div>
   );
 }
