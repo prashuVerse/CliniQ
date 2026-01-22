@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ShieldAlert, FileText, BrainCircuit, Stethoscope, Lock, ArrowRight, User } from "lucide-react";
+import { ShieldAlert, BrainCircuit, Stethoscope, Lock, ArrowRight, User } from "lucide-react";
+
 
 export default function LandingPage() {
   return (
@@ -14,7 +15,8 @@ export default function LandingPage() {
             VitalSync
           </div>
           <div className="flex gap-4">
-            <Link href="/dashboard" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition">Log In</Link>
+            {/* UPDATED LINK */}
+            <Link href="/auth/login" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition">Log In</Link>
           </div>
         </div>
       </nav>
@@ -41,8 +43,8 @@ export default function LandingPage() {
         {/* Role Selection Cards */}
         <div className="max-w-5xl mx-auto mt-16 grid md:grid-cols-3 gap-6">
           
-          {/* Patient Card */}
-          <Link href="/dashboard" className="clinical-card p-8 hover:border-blue-400 group relative overflow-hidden">
+          {/* Patient Card - UPDATED LINK */}
+          <Link href="/auth/login" className="clinical-card p-8 hover:border-blue-400 group relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
             <div className="h-12 w-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-4 group-hover:scale-110 transition">
               <User size={24} />
@@ -54,8 +56,8 @@ export default function LandingPage() {
             </div>
           </Link>
 
-          {/* Doctor Card */}
-          <div className="clinical-card p-8 hover:border-green-400 group relative overflow-hidden cursor-pointer">
+          {/* Doctor Card - UPDATED LINK */}
+          <Link href="/auth/login" className="clinical-card p-8 hover:border-green-400 group relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
             <div className="h-12 w-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-4 group-hover:scale-110 transition">
               <Stethoscope size={24} />
@@ -65,27 +67,26 @@ export default function LandingPage() {
             <div className="mt-4 flex items-center text-green-600 text-sm font-semibold">
               Request Access <ArrowRight className="ml-2 w-4 h-4" />
             </div>
-          </div>
+          </Link>
 
-          {/* Emergency Card */}
-          <Link href="/emergency" className="clinical-card p-8 bg-red-50/50 hover:bg-red-50 border-red-100 hover:border-red-400 group relative overflow-hidden">
+          {/* Emergency Card - UPDATED LINK (Emergency now goes through Doctor Login) */}
+          <Link href="/auth/login" className="clinical-card p-8 bg-red-50/50 hover:bg-red-50 border-red-100 hover:border-red-400 group relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
             <div className="h-12 w-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600 mb-4 group-hover:scale-110 transition">
               <ShieldAlert size={24} />
             </div>
             <h3 className="text-xl font-bold text-red-900">Emergency Mode</h3>
-            <p className="text-red-700/70 mt-2 text-sm">Scan QR or enter emergency token for life-saving allergies & blood data.</p>
+            <p className="text-red-700/70 mt-2 text-sm">Restricted Access. Requires Verified Clinician Login.</p>
             <div className="mt-4 flex items-center text-red-700 text-sm font-semibold">
-              Access Now <ArrowRight className="ml-2 w-4 h-4" />
+              Clinician Login <ArrowRight className="ml-2 w-4 h-4" />
             </div>
           </Link>
 
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="py-8 text-center text-slate-400 text-sm border-t border-slate-200 bg-white">
-        © 2024 VitalSync AI. Not for diagnostic use.
+        © 2026 VitalSync AI. Not for diagnostic use.
       </footer>
     </div>
   );

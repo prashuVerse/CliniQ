@@ -1,189 +1,276 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
-// Relative import pointing to app/lib/store.tsx
-import { AppProvider, useAppContext, type MedicalRecord } from "../../lib/store";
-import { UploadCloud, FileText, CheckCircle, Lock, Siren, Activity, Sparkles } from "lucide-react";
+import { AppProvider, useAppContext, type MedicalRecord, type Reminder } from "../../lib/store";
+import { UploadCloud, FileText, Sparkles, Activity, Clock, Plus, Trash2, Bell, BellOff, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Wrapper to provide context
+
+// Wrapper
 export default function DashboardPage() {
   return (
     <AppProvider>
-      <DashboardContent />
+      <PatientDashboardContent />
     </AppProvider>
   );
 }
 
-function DashboardContent() {
-  const { records, addRecord, allergies, conditions } = useAppContext();
-  
-  const [isDoctorView, setIsDoctorView] = useState(false);
+function PatientDashboardContent() {
+  const { 
+    patientName, records, addRecord, allergies, conditions, 
+    reminders, addReminder, toggleReminder, deleteReminder 
+  } = useAppContext();
+
   const [isUploading, setIsUploading] = useState(false);
   
-  // SIMULATE GEMINI PROCESSING
-   const handleFileUpload = () => {
+  // Reminder Form State
+  const [newMedName, setNewMedName] = useState("");
+  const [newMedTime, setNewMedTime] = useState("");
+
+  // SIMULATE GEMINI UPLOAD
+  const handleFileUpload = () => {
     setIsUploading(true);
     setTimeout(() => {
-      // Create new record using the MedicalRecord type
       const newRecord: MedicalRecord = { 
         id: Math.random().toString(),
         type: "Discharge Summary",
         date: new Date().toISOString().split('T')[0],
-        title: "Emergency Care - Appollo Hospital",
-        doctor: "Dr. K. Verma",
-        summary: "Admitted for severe allergic reaction. Treated with Epinephrine. Observation for 24h recommended. New allergy identified: Peanuts.",
+        title: "Gemini Analysis Result",
+        doctor: "AI Extracted",
+        summary: "New report analyzed. Detected prescription for Amoxicillin 500mg. Advice: Complete full course.",
       };
       addRecord(newRecord);
       setIsUploading(false);
     }, 2500);
   };
 
-  return (
-    <div className={`min-h-screen transition-colors duration-500 ${isDoctorView ? "bg-slate-100" : "bg-slate-50"}`}>
-      
-      {/* Top Navigation */}
-      <nav className={`sticky top-0 z-50 border-b px-6 py-3 flex justify-between items-center transition-colors ${isDoctorView ? "bg-slate-900 border-slate-800 text-white" : "bg-white/80 backdrop-blur-md border-slate-200 text-slate-800"}`}>
-        <div className="flex items-center gap-2 font-bold text-lg">
-          <Activity className={isDoctorView ? "text-green-400" : "text-blue-600"} /> VitalSync
-          {isDoctorView && <span className="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded border border-green-500/30">CLINICIAN MODE</span>}
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setIsDoctorView(!isDoctorView)}
-            className={`text-sm px-4 py-2 rounded-full font-medium transition-all ${isDoctorView ? 'bg-slate-800 text-slate-300 hover:text-white border border-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-          >
-            {isDoctorView ? "Exit Doctor View" : "View as Doctor"}
-          </button>
+  // HANDLE ADD REMINDER
+  const handleAddReminder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMedName || !newMedTime) return;
 
-          {!isDoctorView && (
-            <Link href="/emergency">
-              <button className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 transition">
-                <Siren className="h-4 w-4" /> Emergency
-              </button>
-            </Link>
-          )}
+    const newReminder: Reminder = {
+      id: Math.random().toString(),
+      medicine: newMedName,
+      time: newMedTime,
+      days: ["Daily"], // Default for demo
+      active: true
+    };
+
+    addReminder(newReminder);
+    setNewMedName("");
+    setNewMedTime("");
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 pb-12">
+      
+      {/* Top Navbar */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-2 font-bold text-xl text-slate-800">
+          <div className="bg-blue-600 p-1.5 rounded-lg">
+            <Activity className="text-white h-5 w-5" />
+          </div>
+          VitalSync <span className="text-slate-400 font-normal text-sm ml-2">Patient Portal</span>
+        </div>
+        <div className="flex items-center gap-3">
+           <div className="text-right hidden md:block">
+              <p className="text-sm font-bold text-slate-900">{patientName}</p>
+              <p className="text-xs text-slate-500">ID: ABHA-9921</p>
+           </div>
+           <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+              {patientName.charAt(0)}
+           </div>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto w-full p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto w-full p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* LEFT COLUMN: Upload & Context */}
-        <div className="lg:col-span-1 space-y-6">
+        {/* === COLUMN 1: UPLOAD & HEALTH PROFILE (3 Cols) === */}
+        <div className="lg:col-span-3 space-y-6">
           
-          {/* UPLOAD CARD (Hidden in Doctor View) */}
-          {!isDoctorView && (
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-              <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <UploadCloud className="text-blue-500" /> Add Record
-              </h2>
-              <div 
-                onClick={!isUploading ? handleFileUpload : undefined}
-                className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${isUploading ? 'bg-blue-50/50 border-blue-400' : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'}`}
-              >
-                {isUploading ? (
-                  <div className="space-y-4">
-                    <div className="relative">
-                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
-                      <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-400 h-4 w-4 animate-pulse" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-blue-700">Gemini is analyzing...</p>
-                      <p className="text-xs text-slate-500">Extracting diagnosis & medications</p>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <FileText className="h-10 w-10 text-slate-400 mb-3 group-hover:text-blue-500 transition-colors" />
-                    <p className="text-sm font-medium text-slate-700">Drop PDF / Image here</p>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Upload Card */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+             <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+               <UploadCloud className="text-blue-500" size={20} /> Upload Records
+             </h2>
+             
+             <div 
+               onClick={!isUploading ? handleFileUpload : undefined}
+               className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${isUploading ? 'bg-blue-50/50 border-blue-400' : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'}`}
+             >
+               {isUploading ? (
+                 <div className="space-y-3">
+                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                   <p className="text-xs font-bold text-blue-700 animate-pulse">Gemini analyzing...</p>
+                 </div>
+               ) : (
+                 <>
+                   <FileText className="h-8 w-8 text-slate-400 mb-2" />
+                   <p className="text-xs font-medium text-slate-600">Click to Scan/Upload</p>
+                 </>
+               )}
+             </div>
+          </div>
 
-          {/* CLINICAL CONTEXT CARD */}
+          {/* Health Profile */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <Activity className="text-orange-500" /> Clinical Context
-            </h2>
+            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Health Profile</h2>
             
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-3">Chronic Conditions</h3>
-                <div className="flex flex-wrap gap-2">
-                  {conditions.map(c => (
-                    <span key={c} className="bg-orange-50 text-orange-800 px-3 py-1.5 rounded-lg text-sm font-medium border border-orange-100 flex items-center gap-2">
-                       <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> {c}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-3">Known Allergies</h3>
-                <div className="flex flex-wrap gap-2">
-                  {allergies.map(a => (
-                    <span key={a} className="bg-red-50 text-red-700 px-3 py-1.5 rounded-lg text-sm font-medium border border-red-100 flex items-center gap-2">
-                      <Siren className="h-3 w-3" /> {a}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            <div className="space-y-4">
+               <div>
+                  <span className="text-xs text-slate-500 font-semibold">Chronic Conditions</span>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {conditions.map(c => (
+                      <span key={c} className="bg-orange-50 text-orange-700 px-2 py-1 rounded-md text-xs font-bold border border-orange-100">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+               </div>
+               <div>
+                  <span className="text-xs text-slate-500 font-semibold">Allergies</span>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {allergies.map(a => (
+                      <span key={a} className="bg-red-50 text-red-700 px-2 py-1 rounded-md text-xs font-bold border border-red-100">
+                        {a}
+                      </span>
+                    ))}
+                  </div>
+               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Timeline */}
-        <div className="lg:col-span-2">
-          <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm min-h-[600px]">
-            <div className="flex justify-between items-end mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">Patient History</h2>
-                <p className="text-slate-500 mt-1">AI-synthesized timeline from verified documents.</p>
-              </div>
-            </div>
+        {/* === COLUMN 2: TIMELINE (5 Cols) === */}
+        <div className="lg:col-span-5">
+           <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+             <Activity className="text-blue-600" /> Medical Timeline
+           </h2>
 
-            <div className="relative border-l-2 border-slate-100 ml-4 space-y-10 pb-12">
-              <AnimatePresence>
-                {records.map((record, index) => (
-                  <motion.div 
-                    key={record.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="relative pl-8"
-                  >
-                    {/* Timeline Dot */}
-                    <div className={`absolute -left-[9px] top-1.5 h-4 w-4 rounded-full border-4 ${index === 0 ? 'bg-blue-600 border-blue-100' : 'bg-slate-300 border-white'}`}></div>
-                    
-                    {/* Content */}
-                    <div className="flex flex-col gap-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                           <span className="text-xs font-bold tracking-wide text-slate-400 uppercase">{record.date}</span>
-                           <h3 className="text-lg font-bold text-slate-800">{record.title}</h3>
-                        </div>
-                        <span className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-600 rounded border border-slate-200">
-                          {record.type}
-                        </span>
+           <div className="space-y-6 relative border-l-2 border-slate-200 ml-3 pl-8 pb-10">
+             <AnimatePresence>
+               {records.map((record) => (
+                 <motion.div 
+                   key={record.id}
+                   initial={{ opacity: 0, x: -10 }}
+                   animate={{ opacity: 1, x: 0 }}
+                   className="relative group"
+                 >
+                   {/* Dot */}
+                   <div className="absolute -left-[41px] top-1 h-5 w-5 rounded-full border-4 border-slate-50 bg-blue-500 shadow-sm"></div>
+                   
+                   {/* Card */}
+                   <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start mb-2">
+                         <div>
+                            <span className="text-xs font-bold text-slate-400 uppercase">{record.date}</span>
+                            <h3 className="font-bold text-slate-800">{record.title}</h3>
+                         </div>
+                         <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">
+                           {record.type}
+                         </span>
                       </div>
+                      
+                      {/* AI Summary */}
+                      <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 mt-3 relative">
+                         <Sparkles className="absolute top-2 right-2 text-blue-400 w-3 h-3" />
+                         <p className="text-sm text-slate-700 leading-relaxed">
+                           <span className="font-semibold text-blue-900">Gemini Summary:</span> {record.summary}
+                         </p>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-2">Source: {record.doctor}</p>
+                   </div>
+                 </motion.div>
+               ))}
+             </AnimatePresence>
+           </div>
+        </div>
 
-                      {/* AI Summary Box */}
-                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-slate-700 text-sm leading-relaxed relative">
-                        <Sparkles className="absolute top-3 right-3 text-blue-400 h-3 w-3" />
-                        <p><span className="font-semibold text-slate-900">Summary:</span> {record.summary}</p>
-                        <p className="mt-2 text-xs text-slate-400 font-medium">Dr. {record.doctor}</p>
-                      </div>
+        {/* === COLUMN 3: MEDICINE CABINET (4 Cols) === */}
+        <div className="lg:col-span-4 space-y-6">
+           
+           {/* Medicine Cabinet Header */}
+           <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                 <Clock className="text-purple-600" /> Medicine Cabinet
+              </h2>
+           </div>
+
+           {/* Add Reminder Form */}
+           <div className="bg-white p-5 rounded-2xl border border-purple-100 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-700 mb-3">Set New Reminder</h3>
+              <form onSubmit={handleAddReminder} className="space-y-3">
+                 <div>
+                    <input 
+                      type="text" 
+                      placeholder="Medicine Name (e.g. Dolo 650)" 
+                      value={newMedName}
+                      onChange={(e) => setNewMedName(e.target.value)}
+                      className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                 </div>
+                 <div className="flex gap-2">
+                    <input 
+                      type="time" 
+                      value={newMedTime}
+                      onChange={(e) => setNewMedTime(e.target.value)}
+                      className="flex-1 text-sm p-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                    <button 
+                      type="submit"
+                      className="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-lg transition-colors"
+                    >
+                      <Plus size={20} />
+                    </button>
+                 </div>
+              </form>
+           </div>
+
+           {/* Active Reminders List */}
+           <div className="space-y-3">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Active Schedules</h3>
+              
+              {reminders.length === 0 && (
+                <div className="text-center p-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                   <p className="text-slate-400 text-sm">No active reminders.</p>
+                </div>
+              )}
+
+              {reminders.map(reminder => (
+                 <div key={reminder.id} className={`p-4 rounded-xl border flex items-center justify-between transition-all ${reminder.active ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+                    <div className="flex items-center gap-3">
+                       <div className={`p-2 rounded-lg ${reminder.active ? 'bg-purple-100 text-purple-600' : 'bg-slate-200 text-slate-400'}`}>
+                          {reminder.active ? <Bell size={18} /> : <BellOff size={18} />}
+                       </div>
+                       <div>
+                          <p className={`font-bold text-sm ${reminder.active ? 'text-slate-800' : 'text-slate-500 line-through'}`}>{reminder.medicine}</p>
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
+                             <span className="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">{reminder.time}</span>
+                             <span>{reminder.days.join(", ")}</span>
+                          </div>
+                       </div>
                     </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
-        </div>
+                    
+                    <div className="flex items-center gap-2">
+                       <button 
+                         onClick={() => toggleReminder(reminder.id)}
+                         className="text-xs font-medium text-slate-400 hover:text-purple-600 px-2 py-1"
+                       >
+                         {reminder.active ? "Mute" : "Unmute"}
+                       </button>
+                       <button 
+                         onClick={() => deleteReminder(reminder.id)}
+                         className="text-slate-300 hover:text-red-500 transition-colors"
+                       >
+                         <Trash2 size={16} />
+                       </button>
+                    </div>
+                 </div>
+              ))}
+           </div>
 
+        </div>
       </div>
     </div>
   );
