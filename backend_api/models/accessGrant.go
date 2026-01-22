@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type acessGrant struct {
+type AcessGrant struct {
 	gorm.Model
 	AccessId  string    `json:"acessid"`
 	ViewerId  string    `json:"viewerid"`
