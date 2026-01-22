@@ -1,46 +1,60 @@
 package db
 
 import (
-	"database/sql"
 	"log"
+	"time"
 
+	"github.com/PrasadNaik1310/CliniQ/models"
 	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
+var DB *gorm.DB
+
 func DbInit() error {
-	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/") //CHANGE LOCAL ADDRESS DB IN PROD
-
+	dsn := "root:password@tcp(127.0.0.1:3306)/Cliniq?charset=utf8mb4&parseTime=True&loc=Local" //CHANGE IN PROD
+	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
-		log.Print("Not a ping error")
+		log.Print("Failed to connect to database")
 		return err
+	}
+	DB = database
+	log.Print("Connected to database")
 
-	}
-	if err := db.Ping(); err != nil {
-		log.Print("Ping error")
-		return err
-	}
-	_, errdbCreate := db.Exec("CREATE DATABASE IF NOT EXISTS Cliniq")
-
-	if errdbCreate != nil {
-		log.Fatal("Failed at db creation")
-		return err
-	}
-	defer db.Close()
-	dbSelect, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/Cliniq") //CHANGE LOCAL DB ADDRESS IN PROD
+	//configure connection pool
+	sqlDB, err := DB.DB()
 	if err != nil {
-		log.Fatal(err)
 		return err
 	}
-	query := `			
-						CREATE TABLE users(
-							id INT AUTO_INCREMENT PRIMARY KEY,
-							name text NOT NULL	);`
-	_, errdbExec := dbSelect.Exec(query)
-	if errdbExec != nil {
-		log.Fatal(errdbExec)
-		return errdbExec
-	}
+	sqlDB.SetMaxOpenConns(200)
+	sqlDB.SetMaxIdleConns(102)
+	sqlDB.SetConnMaxIdleTime(10 * time.Minute)
 
-	log.Printf("DB started")
+	//auto-migrate
+	if err := DB.AutoMigrate(&models.User{}); err != nil {
+		log.Print("Failed to AtuoMigrate Users")
+		return err
+	}
+	if err := DB.AutoMigrate(&models.Doctor{}); err != nil {
+		log.Print("failed to Automigrate Doctors")
+		return err
+	}
+	if err := DB.AutoMigrate(&models.AcessGrant{}); err != nil {
+		log.Print("failed to Automigrate Doctors")
+		return err
+	}
+	if err := DB.AutoMigrate(&models.ViewRequest{}); err != nil {
+		log.Print("failed to Automigrate Doctors")
+		return err
+	}
+	log.Printf("user migrated")
+	log.Printf("Doctor migrated")
+	log.Printf("viewrequest migrated")
+	log.Printf("accessrequest migrated")
+	log.Printf("DB Chaluuuuuuuuuu")
 	return nil
 }

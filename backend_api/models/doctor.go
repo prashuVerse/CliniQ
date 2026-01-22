@@ -4,7 +4,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type doctor struct {
+type Doctor struct {
 	gorm.Model
 	Doctorid   string `json:"doctorid"`
 	DoctorName string `json:"doctorname"`

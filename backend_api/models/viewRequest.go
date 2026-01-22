@@ -12,7 +12,7 @@ const (
 	Rejected statusType = "Rejected"
 )
 
-type viewRequest struct {
+type ViewRequest struct {
 	gorm.Model
 	RequestId   string     `json:"requestid"`
 	Requesterid string     `json:"requesterid"`

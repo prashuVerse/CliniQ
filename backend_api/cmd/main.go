@@ -1,9 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/PrasadNaik1310/CliniQ/db"
+	"github.com/PrasadNaik1310/CliniQ/handlers"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -24,18 +30,40 @@ func main() {
 		}
 		c.Next()
 	})
+	err := db.DbInit()
+	if err != nil {
+		log.Fatal(err)
+		log.Println("Stopped execution")
+	}
+
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"service": "CliniQ",
 			"status":  "healthy",
 		})
 	})
-	go func() {
-		err := db.DbInit()
-		if err != nil {
-			log.Fatal(err)
-			log.Println("Stopped execution")
-		}
-	}() //gorountine for db init
 
+	api := r.Group("/api")
+	{
+		auth := api.Group("/auth")
+		{
+			auth.POST("/patient", handlers.PatientLogin)
+			//auth.POST("/doc", handlers.Doctor)
+		}
+
+		go func() {
+			srv := &http.Server{
+				Addr:    ":" + "8080",
+				Handler: r,
+			}
+			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("failed to run server: %v", err)
+			}
+
+		}()
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		<-quit
+		fmt.Println("Signal recieved for shutdown. ")
+	}
 }
