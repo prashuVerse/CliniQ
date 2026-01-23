@@ -50,6 +50,11 @@ func main() {
 			auth.POST("/patient", handlers.PatientLogin)
 			//auth.POST("/doc", handlers.Doctor)
 		}
+		viewAccess := api.Group("/consent")
+		{
+			viewAccess.GET("/viewRequest", handlers.ViewRequest)
+			viewAccess.POST("/askRequest", handlers.AskRequest)
+		}
 
 		go func() {
 			srv := &http.Server{
