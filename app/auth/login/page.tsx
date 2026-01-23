@@ -1,37 +1,66 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react"; //manages componest state
+import { useRouter } from "next/navigation"; //used to navigate programmatically
 import { 
   User, Stethoscope, ArrowRight, ShieldCheck, 
-  Building2, Phone, Fingerprint, CreditCard, Lock, Mail 
-} from "lucide-react";
-import Link from "next/link";
+  Building2, Phone, Fingerprint, CreditCard, Lock, Mail, Loader 
+} from "lucide-react"; //like a library of icons
+import Link from "next/link";// for linking between pages faster than <a href
+import { patientLogin, saveAuthToken, saveUserInfo } from "@/lib/api";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"PATIENT" | "DOCTOR">("PATIENT");
+export default function LoginPage() { //export default mean it treat login page as a component
+  const router = useRouter(); //give u access to next.js navigation methods
+
+  const [activeTab, setActiveTab] = useState<"PATIENT" | "DOCTOR">("PATIENT");//state to track which tab is active either patient or doctor
   
   // --- PATIENT STATE ---
   const [patientStep, setPatientStep] = useState<"DETAILS" | "OTP">("DETAILS");
-  const [patientData, setPatientData] = useState({ phone: "", aadhaar: "", abha: "" });
-  const [otp, setOtp] = useState("");
+  //patientStep->current ui state
+  //setPatientStep->function to update the state
+  //patientStep can be either "DETAILS" or "OTP" initially set to "DETAILS"
+  //when patient enter send otp then patientStep set to otp and show otp page"
 
-  // --- DOCTOR STATE ---
+  const [patientData, setPatientData] = useState({ phone: "", aadhaar: "", abha: "" });
+  //store all patient input data like phone,aadhaar,abha in one object
+
+  const [otp, setOtp] = useState(""); //store otp enter by user
+
+  const [isLoading, setIsLoading] = useState(false); //track loading state for API calls
+  const [error, setError] = useState(""); //store any error messages
   const [doctorMode, setDoctorMode] = useState<"SIGNIN" | "SIGNUP">("SIGNIN");
+  //now if actiive tab is doctor then doctorMode will decide whether to show sign in form or sign up form
+  //doctorMode can be either "SIGNIN" or "SIGNUP" initially set to "SIGNIN"
+  //if docror mode is set to signup then we show the signup page
   
   // --- HANDLERS ---
 
-  const handlePatientLogin = (e: React.FormEvent) => {
+  const handlePatientLogin = async (e: React.FormEvent) => { //function execute when patient form is submitted
     e.preventDefault();
+    setError("");
+
     if (patientStep === "DETAILS") {
-      // Logic: In a real app, this sends an OTP to the phone number
-      setPatientStep("OTP");
+      //if patientStep is details then we move to otp step
+      setPatientStep("OTP"); //set the patient step to otp
     } else {
-      // Logic: Mock OTP verification
-      if (otp === "1234") {
-        router.push("/dashboard"); // Redirect to Patient Dashboard
-      } else {
-        alert("Invalid OTP! (Use 1234 for demo)");
+      // Call the backend API for patient login
+      setIsLoading(true);
+      try {
+        const response = await patientLogin({ abhaid: patientData.abha });
+        
+        if (response.success && response.data) {
+          // Save auth token and user info
+          saveAuthToken(response.data.token);
+          saveUserInfo(response.data.user);
+          
+          // Redirect to Patient Dashboard
+          router.push("/dashboard");
+        } else {
+          setError(response.error || "Login failed. Please try again.");
+        }
+      } catch (err) {
+        setError("An error occurred during login. Please try again.");
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -44,6 +73,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
+      
       
       {/* HEADER LOGO */}
       <div className="mb-8 text-center">
@@ -126,8 +156,9 @@ export default function LoginPage() {
                         </div>
                      </div>
                   </div>
-                  <button type="submit" className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl mt-4 hover:bg-blue-700 transition shadow-lg shadow-blue-200">
-                     Get OTP
+                  {error && <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">{error}</div>}
+                  <button type="submit" disabled={isLoading} className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl mt-4 hover:bg-blue-700 transition shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                     {isLoading ? <><Loader className="animate-spin" size={16} /> Logging in...</> : "Get OTP"}
                   </button>
                 </>
               ) : (
@@ -150,8 +181,9 @@ export default function LoginPage() {
                      onChange={(e) => setOtp(e.target.value)}
                    />
                    
-                   <button type="submit" className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200">
-                     Verify & Login
+                   {error && <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg text-left">{error}</div>}
+                   <button type="submit" disabled={isLoading} className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                     {isLoading ? <><Loader className="animate-spin" size={16} /> Verifying...</> : "Verify & Login"}
                   </button>
                   <button type="button" onClick={() => setPatientStep("DETAILS")} className="text-xs text-slate-400 hover:text-slate-600 underline">
                      Wrong number? Go Back

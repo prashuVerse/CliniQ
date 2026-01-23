@@ -2,13 +2,14 @@
 import { useState } from "react";
 import { 
   Activity, Search, QrCode, Fingerprint, Siren, 
-  FileText, CheckCircle, AlertTriangle, X, ChevronLeft, Sparkles 
+  FileText, CheckCircle, AlertTriangle, X, ChevronLeft, Sparkles, Loader
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   // ... existing imports ...
   Plus, Trash2 
 } from "lucide-react";
+import { askViewRequest, getViewRequests, getUserInfo } from "@/lib/api";
 
 // --- MOCK DATA FOR SCANNED PATIENT ---
 const MOCK_PATIENT = {
@@ -24,7 +25,12 @@ const MOCK_PATIENT = {
 export default function DoctorDashboard() {
   const [activeMode, setActiveMode] = useState<"CLINICAL" | "EMERGENCY">("CLINICAL");
 
-  // ... existing state ...
+  // --- NEW: API STATE ---
+  const [isLoadingRequest, setIsLoadingRequest] = useState(false);
+  const [requestError, setRequestError] = useState("");
+  const [requestSuccess, setRequestSuccess] = useState("");
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+  const [patientAbhaId, setPatientAbhaId] = useState(""); // To store the ABHA ID to request access
 
   // --- NEW: DYNAMIC PRESCRIPTION STATE ---
   const [prescribedMeds, setPrescribedMeds] = useState([
@@ -46,7 +52,7 @@ export default function DoctorDashboard() {
     updated[index][field] = value;
     setPrescribedMeds(updated);
   };
-  
+
   // Clinical State
   const [patientScanned, setPatientScanned] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -56,6 +62,54 @@ export default function DoctorDashboard() {
   const [emergencyStep, setEmergencyStep] = useState<"SELECTION" | "DATA">("SELECTION");
 
   // --- ACTIONS ---
+
+  // Handle request access from patient
+  const handleRequestAccess = async () => {
+    if (!patientAbhaId.trim()) {
+      setRequestError("Please enter patient ABHA ID");
+      return;
+    }
+
+    setIsLoadingRequest(true);
+    setRequestError("");
+    setRequestSuccess("");
+
+    try {
+      const userInfo = getUserInfo();
+      const doctorId = userInfo?.user_id || "DR-8821"; // Fallback to mock ID
+      
+      const response = await askViewRequest({
+        requesterid: doctorId,
+        targetid: patientAbhaId,
+        scope: "medical_records"
+      });
+
+      if (response.success) {
+        setRequestSuccess(`Access request sent to patient ${patientAbhaId}`);
+        setPatientAbhaId("");
+        // Reload pending requests
+        loadPendingRequests();
+      } else {
+        setRequestError(response.error || "Failed to send request");
+      }
+    } catch (err) {
+      setRequestError("An error occurred while sending request");
+    } finally {
+      setIsLoadingRequest(false);
+    }
+  };
+
+  // Load pending view requests
+  const loadPendingRequests = async () => {
+    try {
+      const response = await getViewRequests();
+      if (response.success && Array.isArray(response.data)) {
+        setPendingRequests(response.data);
+      }
+    } catch (err) {
+      // Silent fail for pending requests
+    }
+  };
 
   const handleScanPatient = () => {
     setIsScanning(true);
@@ -173,6 +227,42 @@ export default function DoctorDashboard() {
                        </div>
                     </div>
                   )}
+               </div>
+
+               {/* 1.5 Request Access Card */}
+               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                  <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <Search size={18} /> Request Patient Access
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Patient ABHA ID</label>
+                      <input 
+                        type="text"
+                        placeholder="e.g., name@abha"
+                        value={patientAbhaId}
+                        onChange={(e) => setPatientAbhaId(e.target.value)}
+                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                      />
+                    </div>
+                    {requestError && (
+                      <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
+                        {requestError}
+                      </div>
+                    )}
+                    {requestSuccess && (
+                      <div className="p-3 bg-green-50 border border-green-200 text-green-600 text-sm rounded-lg">
+                        {requestSuccess}
+                      </div>
+                    )}
+                    <button 
+                      onClick={handleRequestAccess}
+                      disabled={isLoadingRequest}
+                      className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isLoadingRequest ? <><Loader className="animate-spin" size={16} /> Sending...</> : "Send Request"}
+                    </button>
+                  </div>
                </div>
 
                {/* 2. Gemini Assistant (Only appears after scan) */}

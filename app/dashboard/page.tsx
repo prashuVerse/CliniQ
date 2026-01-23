@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 
 // Wrapper
-export default function DashboardPage() {
+export default function DashboardPage() { //treat dashboard page as a component
   return (
     <AppProvider>
       <PatientDashboardContent />
@@ -19,36 +19,42 @@ function PatientDashboardContent() {
     patientName, records, addRecord, allergies, conditions, 
     reminders, addReminder, toggleReminder, deleteReminder 
   } = useAppContext();
+ // the app context contiains the patient data so we are taking the data from there and storing in these variables
 
   const [isUploading, setIsUploading] = useState(false);
+  //weather file is being uploaded or not
   
   // Reminder Form State
   const [newMedName, setNewMedName] = useState("");
   const [newMedTime, setNewMedTime] = useState("");
+  //state to store new medicine name and time for reminder
 
   // SIMULATE GEMINI UPLOAD
   const handleFileUpload = () => {
-    setIsUploading(true);
+    //when user click on upload file
+    setIsUploading(true); //set isUploading to true and it show the spinning animation
+
     setTimeout(() => {
       const newRecord: MedicalRecord = { 
-        id: Math.random().toString(),
+        //created a new medical record, typescript enfroce the structure via MedicalRecord type
+        id: Math.random().toString(), // create temporory uniwue id
         type: "Discharge Summary",
         date: new Date().toISOString().split('T')[0],
         title: "Gemini Analysis Result",
         doctor: "AI Extracted",
         summary: "New report analyzed. Detected prescription for Amoxicillin 500mg. Advice: Complete full course.",
       };
-      addRecord(newRecord);
-      setIsUploading(false);
+      addRecord(newRecord); //add the new record to the context using addRecord function
+      setIsUploading(false); //set isUploading to false to stop the animation
     }, 2500);
   };
 
   // HANDLE ADD REMINDER
-  const handleAddReminder = (e: React.FormEvent) => {
+  const handleAddReminder = (e: React.FormEvent) => { //e is the form submit event
     e.preventDefault();
-    if (!newMedName || !newMedTime) return;
+    if (!newMedName || !newMedTime) return; //if medicine or time is empty then return
 
-    const newReminder: Reminder = {
+    const newReminder: Reminder = { //create a new reminder object, typescript enfroce the structure via MedicalRecord type
       id: Math.random().toString(),
       medicine: newMedName,
       time: newMedTime,
@@ -56,7 +62,7 @@ function PatientDashboardContent() {
       active: true
     };
 
-    addReminder(newReminder);
+    addReminder(newReminder); //add the new reminder to the context using addReminder function
     setNewMedName("");
     setNewMedTime("");
   };
