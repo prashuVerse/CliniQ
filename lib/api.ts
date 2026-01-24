@@ -4,7 +4,7 @@
  * Base URL: http://localhost:8080/api
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://cliniq-65r8.onrender.com/api";
 
 // --- TYPE DEFINITIONS ---
 
@@ -64,6 +64,16 @@ async function makeRequest<T>(
 ): Promise<ApiResponse<T>> {
   try {
     const url = `${API_BASE_URL}${endpoint}`;
+    const method = options.method || "GET";
+    
+    // Log API call initiation
+    console.log(`🚀 API CALL: ${method} ${endpoint}`, {
+      timestamp: new Date().toISOString(),
+      url,
+      method,
+      body: options.body ? JSON.parse(options.body as string) : null,
+    });
+
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -77,6 +87,7 @@ async function makeRequest<T>(
     const token = localStorage.getItem("authToken");
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
+      console.log(`✅ Auth token attached to request`);
     }
 
     const response = await fetch(url, {
@@ -86,21 +97,40 @@ async function makeRequest<T>(
 
     const data = await response.json();
 
+    // Log response
+    console.log(`📡 API RESPONSE: ${method} ${endpoint}`, {
+      status: response.status,
+      statusText: response.statusText,
+      success: response.ok,
+      data,
+      timestamp: new Date().toISOString(),
+    });
+
     if (!response.ok) {
+      console.error(`❌ API ERROR: ${method} ${endpoint}`, {
+        status: response.status,
+        error: data.error || `Request failed with status ${response.status}`,
+      });
       return {
         success: false,
         error: data.error || `Request failed with status ${response.status}`,
       };
     }
 
+    console.log(`✨ API SUCCESS: ${method} ${endpoint}`);
     return {
       success: true,
       data,
     };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    console.error(`🔥 API EXCEPTION: ${options.method || "GET"} ${endpoint}`, {
+      error: errorMessage,
+      timestamp: new Date().toISOString(),
+    });
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
+      error: errorMessage,
     };
   }
 }
