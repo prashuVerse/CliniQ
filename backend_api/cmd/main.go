@@ -79,11 +79,18 @@ func main() {
 			}
 		}
 
+		// Read PORT from environment or default to 8080
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "8080"
+		}
+
 		go func() {
 			srv := &http.Server{
-				Addr:    ":" + "8080",
+				Addr:    ":" + port,
 				Handler: r,
 			}
+			log.Printf("Starting server on port %s", port)
 			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Fatalf("failed to run server: %v", err)
 			}
