@@ -44,7 +44,7 @@ import (
 func PatientLogin(c *gin.Context) {
 	var credentials struct {
 		//	Username string `json:"username"`
-		AbhaId string `json:"abhaid"`
+		PatientId string `json:"patientid"`
 	}
 
 	if err := c.ShouldBindJSON(&credentials); err != nil {
@@ -52,11 +52,11 @@ func PatientLogin(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Login attempt for AbhaId: %s", credentials.AbhaId)
+	log.Printf("Login attempt for PatientId: %s", credentials.PatientId)
 
 	var patient models.User
-	if err := db.DB.Where("abha_id = ?", credentials.AbhaId).First(&patient).Error; err != nil {
-		log.Printf("User not found: %s", credentials.AbhaId)
+	if err := db.DB.Where("patient_id = ?", credentials.PatientId).First(&patient).Error; err != nil {
+		log.Printf("User not found: %s", credentials.PatientId)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
@@ -91,8 +91,8 @@ func PatientLogin(c *gin.Context) {
 
 	// Generate token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": patient.ID,
-		"abhaId":  patient.AbhaId,
+		"user_id":    patient.ID,
+		"patient_id": patient.PatientId,
 
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	})
@@ -104,13 +104,13 @@ func PatientLogin(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Token generated successfully for user: %s", credentials.AbhaId)
+	log.Printf("Token generated successfully for user: %s", credentials.PatientId)
 
 	c.JSON(http.StatusOK, gin.H{
 		"token": tokenString,
 		"user": gin.H{
-			"user_id": patient.ID,
-			"abhaId":  patient.AbhaId,
+			"user_id":    patient.ID,
+			"patient_id": patient.PatientId,
 		},
 	})
 }

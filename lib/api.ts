@@ -6,6 +6,7 @@ if (!API_BASE_URL) {
 
 
 export interface PatientCredentials {
+  abhaid?: string;
   phone?: string;
   aadhaar?: string;
   otp?: string;

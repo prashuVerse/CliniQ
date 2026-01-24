@@ -16,24 +16,21 @@ export default function LoginPage() {
   // --- PATIENT STATE ---
   const [patientStep, setPatientStep] = useState<"DETAILS" | "OTP">("DETAILS");
   
-  // NEW STATE: Track which method the patient wants to use
+  
   const [loginMethod, setLoginMethod] = useState<"PHONE" | "AADHAAR">("PHONE");
 
-  const [patientData, setPatientData] = useState({ phone: "", aadhaar: "" });
-  //store all patient input data like phone,aadhaar,abha in one object
+  const [patientData, setPatientData] = useState({ phone: "", aadhaar: "", abhaid: "" });
+  
 
   const [otp, setOtp] = useState(""); //store otp enter by user
 
-  // --- DOCTOR STATE ---
+  
   const [doctorData, setDoctorData] = useState({ doctorid: "", hospitalid: "", password: "" });
 
   const [isLoading, setIsLoading] = useState(false); //track loading state for API calls
   const [error, setError] = useState(""); //store any error messages
   const [doctorMode, setDoctorMode] = useState<"SIGNIN" | "SIGNUP">("SIGNIN");
-  //now if actiive tab is doctor then doctorMode will decide whether to show sign in form or sign up form
-  //doctorMode can be either "SIGNIN" or "SIGNUP" initially set to "SIGNIN"
-  //if docror mode is set to signup then we show the signup page
-  
+
   // --- HANDLERS ---
 
   const handlePatientLogin = async (e: React.FormEvent) => {
@@ -45,12 +42,12 @@ export default function LoginPage() {
         setError("Please enter either mobile number or aadhaar number");
         return;
       }
-      // Generate a test OTP for development
+  
       const testOTP = Math.floor(1000 + Math.random() * 9000).toString();
-      console.log(`🔐 TEST OTP: ${testOTP}`);
+      console.log(` TEST OTP: ${testOTP}`);
       setPatientStep("OTP");
     } else {
-      // Call the backend API for patient login
+  
       if (!patientData.phone && !patientData.aadhaar) {
         setError("Please enter either mobile number or aadhaar number");
         setPatientStep("DETAILS");
@@ -58,10 +55,10 @@ export default function LoginPage() {
       }
       setIsLoading(true);
       try {
+  
+        const abhaid = patientData.abhaid || patientData.aadhaar || patientData.phone;
         const response = await patientLogin({ 
-          phone: patientData.phone || undefined,
-          aadhaar: patientData.aadhaar || undefined,
-          otp: otp
+          abhaid: abhaid
         });
         
         if (response.success && response.data) {
