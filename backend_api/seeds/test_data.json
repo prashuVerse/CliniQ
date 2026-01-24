@@ -3,27 +3,37 @@
     {
       "patient_id": "PAT-001",
       "username": "Rahul Deshmukh",
-      "abha_id": "rahul.deshmukh@abha"
+      "abha_id": "rahul.deshmukh@abha",
+      "phoneno": "9876543210",
+      "aadhar": "123456789012"
     },
     {
       "patient_id": "PAT-002",
       "username": "Priya Sharma",
-      "abha_id": "priya.sharma@abha"
+      "abha_id": "priya.sharma@abha",
+      "phoneno": "9123456789",
+      "aadhar": "234567890123"
     },
     {
       "patient_id": "PAT-003",
       "username": "Amit Kumar",
-      "abha_id": "amit.kumar@abha"
+      "abha_id": "amit.kumar@abha",
+      "phoneno": "8765432109",
+      "aadhar": "345678901234"
     },
     {
       "patient_id": "PAT-004",
       "username": "Sneha Patel",
-      "abha_id": "sneha.patel@abha"
+      "abha_id": "sneha.patel@abha",
+      "phoneno": "9234567890",
+      "aadhar": "456789012345"
     },
     {
       "patient_id": "PAT-005",
       "username": "Vikram Singh",
-      "abha_id": "vikram.singh@abha"
+      "abha_id": "vikram.singh@abha",
+      "phoneno": "8234567890",
+      "aadhar": "567890123456"
     }
   ],
   "doctors": [

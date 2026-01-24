@@ -44,7 +44,7 @@ import (
 func PatientLogin(c *gin.Context) {
 	var credentials struct {
 		//	Username string `json:"username"`
-		PatientId string `json:"patientid"`
+		Phoneno string `json:"phoneno"`
 	}
 
 	if err := c.ShouldBindJSON(&credentials); err != nil {
@@ -52,11 +52,11 @@ func PatientLogin(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Login attempt for PatientId: %s", credentials.PatientId)
+	log.Printf("Login attempt for Phoneno: %s", credentials.Phoneno)
 
 	var patient models.User
-	if err := db.DB.Where("patient_id = ?", credentials.PatientId).First(&patient).Error; err != nil {
-		log.Printf("User not found: %s", credentials.PatientId)
+	if err := db.DB.Where("phoneno = ?", credentials.Phoneno).First(&patient).Error; err != nil {
+		log.Printf("User not found: %s", credentials.Phoneno)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
@@ -104,13 +104,14 @@ func PatientLogin(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Token generated successfully for user: %s", credentials.PatientId)
+	log.Printf("Token generated successfully for user: %s", credentials.Phoneno)
 
 	c.JSON(http.StatusOK, gin.H{
 		"token": tokenString,
 		"user": gin.H{
 			"user_id":    patient.ID,
 			"patient_id": patient.PatientId,
+			"phoneno":    patient.Phoneno,
 		},
 	})
 }
