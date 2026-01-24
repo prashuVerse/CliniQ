@@ -106,6 +106,7 @@ async function makeRequest<T>(
     const token = localStorage.getItem("authToken");
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
+      console.log(`✅ Auth token attached to request`);
     }
 
     const response = await fetch(url, {
@@ -125,6 +126,7 @@ async function makeRequest<T>(
       };
     }
 
+    console.log(`✨ API SUCCESS: ${method} ${endpoint}`);
     return {
       success: true,
       data,
@@ -134,6 +136,7 @@ async function makeRequest<T>(
     console.error(`[API] Exception: ${errorMessage}`, error);
     return {
       success: false,
+      error: errorMessage,
       error: errorMessage,
     };
   }

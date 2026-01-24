@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react"; //manages componest state
-import { useRouter } from "next/navigation"; //used to navigate programmatically
+import { useState } from "react"; 
+import { useRouter } from "next/navigation"; 
 import { 
   User, Stethoscope, ArrowRight, ShieldCheck, 
   Building2, Phone, Fingerprint, CreditCard, Lock, Mail, Loader 
@@ -8,17 +8,16 @@ import {
 import Link from "next/link";// for linking between pages faster than <a href
 import { patientLogin, doctorLogin, saveAuthToken, saveUserInfo } from "@/lib/api";
 
-export default function LoginPage() { //export default mean it treat login page as a component
-  const router = useRouter(); //give u access to next.js navigation methods
+export default function LoginPage() { 
+  const router = useRouter(); 
 
-  const [activeTab, setActiveTab] = useState<"PATIENT" | "DOCTOR">("PATIENT");//state to track which tab is active either patient or doctor
+  const [activeTab, setActiveTab] = useState<"PATIENT" | "DOCTOR">("PATIENT");
   
   // --- PATIENT STATE ---
   const [patientStep, setPatientStep] = useState<"DETAILS" | "OTP">("DETAILS");
-  //patientStep->current ui state
-  //setPatientStep->function to update the state
-  //patientStep can be either "DETAILS" or "OTP" initially set to "DETAILS"
-  //when patient enter send otp then patientStep set to otp and show otp page"
+  
+  // NEW STATE: Track which method the patient wants to use
+  const [loginMethod, setLoginMethod] = useState<"PHONE" | "AADHAAR">("PHONE");
 
   const [patientData, setPatientData] = useState({ phone: "", aadhaar: "" });
   //store all patient input data like phone,aadhaar,abha in one object
@@ -66,11 +65,8 @@ export default function LoginPage() { //export default mean it treat login page 
         });
         
         if (response.success && response.data) {
-          // Save auth token and user info
           saveAuthToken(response.data.token);
           saveUserInfo(response.data.user);
-          
-          // Redirect to Patient Dashboard
           router.push("/dashboard");
         } else {
           setError(response.error || "Login failed. Please try again.");
@@ -125,7 +121,8 @@ export default function LoginPage() { //export default mean it treat login page 
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
+    // UPDATED: Background with gradient and subtle grid pattern
+    <div className="min-h-screen bg-slate-50 relative flex flex-col justify-center items-center p-4 overflow-hidden">
       
       
 <div className="mb-8 text-center">
@@ -135,7 +132,7 @@ export default function LoginPage() { //export default mean it treat login page 
           </div>
           VitalSync
         </div>
-        <p className="text-slate-500 text-sm mt-2">Secure Unified Health Interface</p>
+        <p className="text-slate-500 font-medium text-sm mt-3">Secure Unified Health Interface</p>
       </div>
 
       <div className="bg-white w-full max-w-md rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
@@ -143,13 +140,13 @@ export default function LoginPage() { //export default mean it treat login page 
         <div className="flex border-b border-slate-100">
           <button 
             onClick={() => setActiveTab("PATIENT")}
-            className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'PATIENT' ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`flex-1 py-3 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'PATIENT' ? 'bg-white text-blue-600 shadow-md shadow-slate-200 scale-[1.02]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
           >
             <User size={18} /> Patient
           </button>
           <button 
             onClick={() => setActiveTab("DOCTOR")}
-            className={`flex-1 py-4 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'DOCTOR' ? 'bg-green-50 text-green-600 border-b-2 border-green-600' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`flex-1 py-3 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 ${activeTab === 'DOCTOR' ? 'bg-white text-green-600 shadow-md shadow-slate-200 scale-[1.02]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
           >
             <Stethoscope size={18} /> Doctor
           </button>
@@ -158,9 +155,30 @@ export default function LoginPage() { //export default mean it treat login page 
         <div className="p-8">
           
           {activeTab === 'PATIENT' && (
-            <form onSubmit={handlePatientLogin} className="space-y-4">
+            <form onSubmit={handlePatientLogin} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
               {patientStep === "DETAILS" ? (
                 <>
+                  {/* TOGGLE */}
+                  <div className="bg-slate-100 p-1.5 rounded-xl flex relative">
+                     {/* Animated Background Slider Logic (Simple Version) */}
+                     <div className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-lg shadow-sm transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] ${loginMethod === 'PHONE' ? 'left-1.5' : 'left-[calc(50%+3px)]'}`}></div>
+                     
+                     <button 
+                        type="button"
+                        onClick={() => setLoginMethod("PHONE")}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg relative z-10 transition-colors duration-300 ${loginMethod === 'PHONE' ? 'text-blue-600' : 'text-slate-500'}`}
+                     >
+                        Via Mobile
+                     </button>
+                     <button 
+                        type="button"
+                        onClick={() => setLoginMethod("AADHAAR")}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg relative z-10 transition-colors duration-300 ${loginMethod === 'AADHAAR' ? 'text-blue-600' : 'text-slate-500'}`}
+                     >
+                        Via Aadhaar
+                     </button>
+                  </div>
+
                   <div className="space-y-4">
                      <div>
                         <label className="text-xs font-bold text-slate-500 uppercase ml-1">Mobile Number</label>
@@ -187,9 +205,11 @@ export default function LoginPage() { //export default mean it treat login page 
                         </div>
                      </div>
                   </div>
-                  {error && <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">{error}</div>}
-                  <button type="submit" disabled={isLoading} className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl mt-4 hover:bg-blue-700 transition shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                     {isLoading ? <><Loader className="animate-spin" size={16} /> Logging in...</> : "Get OTP"}
+
+                  {error && <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg animate-in fade-in zoom-in">{error}</div>}
+                  
+                  <button type="submit" disabled={isLoading} className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold rounded-xl mt-4 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                     {isLoading ? <><Loader className="animate-spin" size={18} /> Logging in...</> : <>Get Verification Code <ArrowRight size={18}/></>}
                   </button>
                 </>
               ) : (
@@ -198,26 +218,35 @@ export default function LoginPage() { //export default mean it treat login page 
                       <ShieldCheck className="text-blue-600 h-8 w-8" />
                    </div>
                    <div>
-                      <h3 className="text-lg font-bold text-slate-800">Enter Verification Code</h3>
-                      <p className="text-slate-500 text-xs">Sent to +91 ******{patientData.phone.slice(-4)}</p>
+                      <h3 className="text-xl font-bold text-slate-800">Enter Verification Code</h3>
+                      <p className="text-slate-500 text-sm mt-1">
+                        {loginMethod === "PHONE" 
+                           ? `Sent to +91 ******${patientData.phone.slice(-4)}`
+                           : `Sent to Aadhaar linked mobile`
+                        }
+                      </p>
                    </div>
                    
                    <input 
-                     type="text" 
-                     className="w-32 mx-auto text-center text-2xl font-bold tracking-widest py-2 border-b-2 border-slate-200 focus:border-blue-600 focus:outline-none bg-transparent"
-                     placeholder="0000"
-                     maxLength={4}
-                     value={otp}
-                     onChange={(e) => setOtp(e.target.value)}
+                      type="text" 
+                      className="w-40 mx-auto text-center text-3xl font-bold tracking-[0.5em] py-3 border-b-2 border-slate-200 focus:border-blue-600 focus:outline-none bg-transparent transition-all"
+                      placeholder="0000"
+                      maxLength={4}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      autoFocus
                    />
                    
                    {error && <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg text-left">{error}</div>}
-                   <button type="submit" disabled={isLoading} className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                     {isLoading ? <><Loader className="animate-spin" size={16} /> Verifying...</> : "Verify & Login"}
-                  </button>
-                  <button type="button" onClick={() => setPatientStep("DETAILS")} className="text-xs text-slate-400 hover:text-slate-600 underline">
-                     Wrong number? Go Back
-                  </button>
+                   
+                   <div className="space-y-3">
+                     <button type="submit" disabled={isLoading} className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                        {isLoading ? <><Loader className="animate-spin" size={18} /> Verifying...</> : "Verify & Login"}
+                     </button>
+                     <button type="button" onClick={() => setPatientStep("DETAILS")} className="text-xs text-slate-400 hover:text-blue-600 underline transition-colors">
+                        Entered wrong details? Go Back
+                     </button>
+                   </div>
                 </div>
               )}
             </form>
@@ -227,18 +256,21 @@ export default function LoginPage() { //export default mean it treat login page 
             <form onSubmit={handleDoctorSubmit} className="space-y-4">
               
               <div className="flex justify-center mb-6">
-                 <div className="bg-slate-100 p-1 rounded-lg inline-flex">
+                 <div className="bg-slate-100 p-1 rounded-xl inline-flex relative">
+                    {/* Sliding Pill */}
+                    <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-lg shadow-sm transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1.0)] ${doctorMode === 'SIGNIN' ? 'left-1' : 'left-[calc(50%+2px)]'}`}></div>
+
                     <button 
                       type="button"
                       onClick={() => setDoctorMode("SIGNIN")}
-                      className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${doctorMode === 'SIGNIN' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}
+                      className={`px-6 py-2 text-xs font-bold rounded-lg relative z-10 transition-colors duration-300 ${doctorMode === 'SIGNIN' ? 'text-green-700' : 'text-slate-500'}`}
                     >
                       Sign In
                     </button>
                     <button 
                        type="button"
                        onClick={() => setDoctorMode("SIGNUP")}
-                       className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${doctorMode === 'SIGNUP' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}
+                       className={`px-6 py-2 text-xs font-bold rounded-lg relative z-10 transition-colors duration-300 ${doctorMode === 'SIGNUP' ? 'text-green-700' : 'text-slate-500'}`}
                     >
                       Sign Up
                     </button>
@@ -246,24 +278,24 @@ export default function LoginPage() { //export default mean it treat login page 
               </div>
 
               {doctorMode === "SIGNUP" && (
-                <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
                    <div className="grid grid-cols-2 gap-3">
-                     <div className="relative">
-                       <User className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
-                       <input required type="text" placeholder="Dr. Name" className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-green-500" />
+                     <div className="relative group focus-within:scale-[1.02] transition-transform">
+                       <User className="absolute left-3 top-3.5 text-slate-400 h-4 w-4 group-focus-within:text-green-600 transition-colors" />
+                       <input required type="text" placeholder="Dr. Name" className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all placeholder:font-normal" />
                      </div>
-                     <div className="relative">
-                       <Phone className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
-                       <input required type="text" placeholder="Phone" className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-green-500" />
+                     <div className="relative group focus-within:scale-[1.02] transition-transform">
+                       <Phone className="absolute left-3 top-3.5 text-slate-400 h-4 w-4 group-focus-within:text-green-600 transition-colors" />
+                       <input required type="text" placeholder="Phone" className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all placeholder:font-normal" />
                      </div>
                    </div>
-                   <div className="relative">
-                      <Mail className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
-                      <input required type="email" placeholder="Email Address" className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-green-500" />
+                   <div className="relative group focus-within:scale-[1.02] transition-transform">
+                      <Mail className="absolute left-3 top-3.5 text-slate-400 h-4 w-4 group-focus-within:text-green-600 transition-colors" />
+                      <input required type="email" placeholder="Email Address" className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all placeholder:font-normal" />
                    </div>
-                   <div className="relative">
-                      <Building2 className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
-                      <input required type="text" placeholder="Hospital Name" className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-green-500" />
+                   <div className="relative group focus-within:scale-[1.02] transition-transform">
+                      <Building2 className="absolute left-3 top-3.5 text-slate-400 h-4 w-4 group-focus-within:text-green-600 transition-colors" />
+                      <input required type="text" placeholder="Hospital Name" className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all placeholder:font-normal" />
                    </div>
                 </div>
               )}
@@ -291,8 +323,8 @@ export default function LoginPage() { //export default mean it treat login page 
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:outline-none text-sm font-bold text-slate-700"
                     />
                  </div>
-                 <div className="relative">
-                    <Lock className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
+                 <div className="relative group focus-within:scale-[1.02] transition-all duration-300">
+                    <Lock className="absolute left-4 top-3.5 text-slate-400 h-5 w-5 group-focus-within:text-green-600 transition-colors" />
                     <input 
                       required
                       type="password" 
@@ -319,8 +351,23 @@ export default function LoginPage() { //export default mean it treat login page 
         </div>
       </div>
 
-      <div className="mt-8 text-center text-xs text-slate-400">
-        <Link href="/" className="hover:text-slate-600 underline">← Back to Home</Link>
+     <div className="relative z-10 mt-8 text-center text-xs text-slate-400 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200">
+        <Link 
+          href="/" 
+          className="
+            inline-block 
+            cursor-pointer 
+            text-slate-400 
+            transition-all 
+            duration-300 
+            hover:text-blue-600 
+            hover:scale-110 
+            hover:drop-shadow-[0_0_8px_rgba(37,99,235,0.6)] 
+            hover:-translate-y-1
+          "
+        >
+          ← Back to Home
+        </Link>
       </div>
 
     </div>
