@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/PrasadNaik1310/CliniQ/db"
 	"github.com/PrasadNaik1310/CliniQ/models"
@@ -51,7 +52,11 @@ func AcceptRequest(c *gin.Context) {
 	}
 
 	// Update status to Accepted
-	if err := db.DB.Model(&viewRequest).Update("status", models.Accepted).Error; err != nil {
+	now := time.Now()
+	if err := db.DB.Model(&viewRequest).Updates(map[string]interface{}{
+		"status":      models.Accepted,
+		"accepted_at": now,
+	}).Error; err != nil {
 		log.Printf("Error updating request: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to accept request"})
 		return
@@ -94,7 +99,11 @@ func RejectRequest(c *gin.Context) {
 	}
 
 	// Update status to Rejected
-	if err := db.DB.Model(&viewRequest).Update("status", models.Rejected).Error; err != nil {
+	now := time.Now()
+	if err := db.DB.Model(&viewRequest).Updates(map[string]interface{}{
+		"status":      models.Rejected,
+		"rejected_at": now,
+	}).Error; err != nil {
 		log.Printf("Error updating request: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reject request"})
 		return
