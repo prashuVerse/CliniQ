@@ -113,7 +113,6 @@ export default function QRCodeGenerator() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-8">
-      {/* Generate QR Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-6">
           <QrCode className="w-5 h-5 text-blue-600" />
@@ -135,7 +134,6 @@ export default function QRCodeGenerator() {
         )}
 
         <div className="space-y-4">
-          {/* Duration Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Clock className="inline w-4 h-4 mr-1" />
@@ -158,7 +156,6 @@ export default function QRCodeGenerator() {
             <p className="text-xs text-gray-500 mt-1">Choose how long the QR code will be valid</p>
           </div>
 
-          {/* Access Level Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Lock className="inline w-4 h-4 mr-1" />
@@ -190,7 +187,6 @@ export default function QRCodeGenerator() {
             </div>
           </div>
 
-          {/* Generate Button */}
           <button
             onClick={handleGenerateQR}
             disabled={generating}
@@ -205,7 +201,6 @@ export default function QRCodeGenerator() {
         </div>
       </div>
 
-      {/* Active QR Codes Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -318,7 +313,6 @@ export default function QRCodeGenerator() {
         )}
       </div>
 
-      {/* Info Section */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex gap-3">
           <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />

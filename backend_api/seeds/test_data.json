@@ -1,0 +1,101 @@
+{
+  "patients": [
+    {
+      "patient_id": "PAT-001",
+      "username": "Rahul Deshmukh",
+      "abha_id": "rahul.deshmukh@abha"
+    },
+    {
+      "patient_id": "PAT-002",
+      "username": "Priya Sharma",
+      "abha_id": "priya.sharma@abha"
+    },
+    {
+      "patient_id": "PAT-003",
+      "username": "Amit Kumar",
+      "abha_id": "amit.kumar@abha"
+    },
+    {
+      "patient_id": "PAT-004",
+      "username": "Sneha Patel",
+      "abha_id": "sneha.patel@abha"
+    },
+    {
+      "patient_id": "PAT-005",
+      "username": "Vikram Singh",
+      "abha_id": "vikram.singh@abha"
+    }
+  ],
+  "doctors": [
+    {
+      "doctor_id": "DOC-001",
+      "doctor_name": "Dr. Arun Verma",
+      "hospital_id": "HOSP-001",
+      "password": "password123"
+    },
+    {
+      "doctor_id": "DOC-002",
+      "doctor_name": "Dr. Priya Gupta",
+      "hospital_id": "HOSP-001",
+      "password": "password123"
+    },
+    {
+      "doctor_id": "DOC-003",
+      "doctor_name": "Dr. Rajesh Rao",
+      "hospital_id": "HOSP-002",
+      "password": "password123"
+    },
+    {
+      "doctor_id": "DOC-004",
+      "doctor_name": "Dr. Meera Singh",
+      "hospital_id": "HOSP-002",
+      "password": "password123"
+    },
+    {
+      "doctor_id": "DOC-005",
+      "doctor_name": "Dr. Vikram Patel",
+      "hospital_id": "HOSP-001",
+      "password": "password123"
+    }
+  ],
+  "prescriptions": [
+    {
+      "user_id": 1,
+      "file_name": "prescription_jan_2026.pdf",
+      "file_type": "pdf",
+      "file_size": 256000,
+      "description": "Monthly prescription for diabetes management"
+    },
+    {
+      "user_id": 2,
+      "file_name": "blood_test_results.txt",
+      "file_type": "txt",
+      "file_size": 5120,
+      "description": "Recent blood test results"
+    },
+    {
+      "user_id": 1,
+      "file_name": "medication_list.pdf",
+      "file_type": "pdf",
+      "file_size": 180000,
+      "description": "Current medications and dosages"
+    },
+    {
+      "user_id": 3,
+      "file_name": "cardiology_report.pdf",
+      "file_type": "pdf",
+      "file_size": 320000,
+      "description": "Cardiac assessment report"
+    }
+  ],
+  "hospitals": [
+    {
+      "hospital_id": "HOSP-001",
+      "name": "Apollo Hospital Pune"
+    },
+    {
+      "hospital_id": "HOSP-002",
+      "name": "Holy Cross Hospital"
+    }
+  ]
+}

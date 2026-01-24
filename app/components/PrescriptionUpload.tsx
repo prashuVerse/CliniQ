@@ -139,7 +139,6 @@ export default function PrescriptionUpload() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-8">
-      {/* Upload Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-4">
           <Upload className="w-5 h-5 text-blue-600" />
@@ -161,7 +160,6 @@ export default function PrescriptionUpload() {
         )}
 
         <div className="space-y-4">
-          {/* File Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Select File (PDF or TXT)
@@ -182,7 +180,6 @@ export default function PrescriptionUpload() {
             <p className="text-xs text-gray-500 mt-1">Maximum file size: 10MB</p>
           </div>
 
-          {/* File Preview */}
           {selectedFile && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -204,7 +201,6 @@ export default function PrescriptionUpload() {
             </div>
           )}
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Description (Optional)
@@ -218,7 +214,6 @@ export default function PrescriptionUpload() {
             />
           </div>
 
-          {/* Upload Button */}
           <button
             onClick={handleUpload}
             disabled={!selectedFile || uploading}
@@ -233,7 +228,6 @@ export default function PrescriptionUpload() {
         </div>
       </div>
 
-      {/* Prescriptions List Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">

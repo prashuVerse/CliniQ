@@ -2,35 +2,51 @@
 import { useState } from "react";
 import { 
   Activity, Search, QrCode, Fingerprint, Siren, 
-  FileText, CheckCircle, AlertTriangle, X, ChevronLeft, Sparkles, Loader
+  FileText, CheckCircle, AlertTriangle, X, ChevronLeft, Sparkles, Loader, LogOut
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+//import { motion, AnimatePresence } from "framer-motion";
 import { 
   // ... existing imports ...
   Plus, Trash2 
 } from "lucide-react";
-import { askViewRequest, getViewRequests, getUserInfo } from "@/lib/api";
+import { 
+  askViewRequest, 
+  getViewRequests, 
+  getUserInfo, 
+  getPatientData,
+  getPatientByQRToken,
+  clearAuth,
+  type PatientData 
+} from "@/lib/api";
+import { useRouter } from "next/navigation";
 
-// --- MOCK DATA FOR SCANNED PATIENT ---
+// Mock patient data for emergency mode
 const MOCK_PATIENT = {
-  name: "Rahul Deshmukh",
-  age: 45,
-  id: "ABHA-9921",
-  blood: "O+",
-  allergies: ["Penicillin", "Shellfish"],
-  conditions: ["Type 2 Diabetes"],
-  recentVisit: "10 Oct 2025 - Dr. Sharma (Cardiology)"
+  name: "John Doe",
+  allergies: ["Penicillin", "Peanuts"],
+  conditions: ["Type 2 Diabetes", "Hypertension", "Asthma"]
 };
 
 export default function DoctorDashboard() {
+  const router = useRouter();
   const [activeMode, setActiveMode] = useState<"CLINICAL" | "EMERGENCY">("CLINICAL");
+
+  const handleSignOut = () => {
+    clearAuth();
+    router.push("/auth/login");
+  };
+
+  // --- PATIENT DATA STATE ---
+  const [patientData, setPatientData] = useState<PatientData | null>(null);
+  const [loadingPatient, setLoadingPatient] = useState(false);
+  const [patientError, setPatientError] = useState("");
 
   // --- NEW: API STATE ---
   const [isLoadingRequest, setIsLoadingRequest] = useState(false);
   const [requestError, setRequestError] = useState("");
   const [requestSuccess, setRequestSuccess] = useState("");
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
-  const [patientAbhaId, setPatientAbhaId] = useState(""); // To store the ABHA ID to request access
+  const [patientId, setPatientId] = useState(""); // To store the Patient ID to request access
 
   // --- NEW: DYNAMIC PRESCRIPTION STATE ---
   const [prescribedMeds, setPrescribedMeds] = useState([
@@ -65,8 +81,8 @@ export default function DoctorDashboard() {
 
   // Handle request access from patient
   const handleRequestAccess = async () => {
-    if (!patientAbhaId.trim()) {
-      setRequestError("Please enter patient ABHA ID");
+    if (!patientId.trim()) {
+      setRequestError("Please enter patient ID");
       return;
     }
 
@@ -80,13 +96,13 @@ export default function DoctorDashboard() {
       
       const response = await askViewRequest({
         requesterid: doctorId,
-        targetid: patientAbhaId,
+        targetid: patientId,
         scope: "medical_records"
       });
 
       if (response.success) {
-        setRequestSuccess(`Access request sent to patient ${patientAbhaId}`);
-        setPatientAbhaId("");
+        setRequestSuccess(`Access request sent to patient ${patientId}`);
+        setPatientId("");
         // Reload pending requests
         loadPendingRequests();
       } else {
@@ -111,12 +127,42 @@ export default function DoctorDashboard() {
     }
   };
 
-  const handleScanPatient = () => {
+  const handleScanPatient = async () => {
     setIsScanning(true);
-    setTimeout(() => {
+    setPatientError("");
+    
+    try {
+      // In a real scenario, this would open a QR code scanner
+      // For now, we'll prompt for a QR token or patient ID
+      const qrToken = prompt("Enter QR Token or Patient ID:");
+      
+      if (!qrToken) {
+        setIsScanning(false);
+        return;
+      }
+
+      // Try to scan QR token first
+      const response = await getPatientByQRToken(qrToken);
+      
+      if (response.success && response.data) {
+        setPatientData(response.data.data);
+        setPatientScanned(true);
+      } else {
+        // If QR scan fails, try fetching by patient ID directly
+        const patientResponse = await getPatientData(qrToken);
+        if (patientResponse.success && patientResponse.data) {
+          setPatientData(patientResponse.data);
+          setPatientScanned(true);
+        } else {
+          setPatientError("Could not retrieve patient data. Invalid token or ID.");
+        }
+      }
+    } catch (error) {
+      console.error("Error scanning patient:", error);
+      setPatientError("Failed to scan QR code. Please try again.");
+    } finally {
       setIsScanning(false);
-      setPatientScanned(true);
-    }, 2000); // 2 second scan simulation
+    }
   };
 
   const handleGeminiSummary = async () => {
@@ -156,7 +202,6 @@ export default function DoctorDashboard() {
   return (
     <div className={`min-h-screen transition-colors duration-500 ${activeMode === 'EMERGENCY' ? 'bg-slate-900 text-red-50' : 'bg-slate-50 text-slate-900'}`}>
       
-      {/* --- TOP NAVIGATION --- */}
       <nav className={`sticky top-0 z-50 px-6 py-4 flex justify-between items-center border-b ${activeMode === 'EMERGENCY' ? 'bg-red-950/30 border-red-900/50 backdrop-blur-md' : 'bg-white border-slate-200'}`}>
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${activeMode === 'EMERGENCY' ? 'bg-red-600 animate-pulse' : 'bg-green-600'}`}>
@@ -170,35 +215,41 @@ export default function DoctorDashboard() {
           </div>
         </div>
 
-        {/* THE MODE SWITCH BUTTON */}
-        <button 
-          onClick={toggleEmergency}
-          className={`px-6 py-3 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2 ${
-            activeMode === 'EMERGENCY' 
-            ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700' 
-            : 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white hover:shadow-red-200 hover:scale-105'
-          }`}
-        >
-          {activeMode === 'EMERGENCY' ? (
-             <><ChevronLeft /> Exit Emergency</>
-          ) : (
-             <><Siren size={18} /> ACTIVATE EMERGENCY</>
-          )}
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={toggleEmergency}
+            className={`px-6 py-3 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2 ${
+              activeMode === 'EMERGENCY' 
+              ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700' 
+              : 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white hover:shadow-red-200 hover:scale-105'
+            }`}
+          >
+            {activeMode === 'EMERGENCY' ? (
+               <><ChevronLeft /> Exit Emergency</>
+            ) : (
+               <><Siren size={18} /> ACTIVATE EMERGENCY</>
+            )}
+          </button>
+          <button
+            onClick={handleSignOut}
+            className={`p-3 rounded-lg transition-colors ${
+              activeMode === 'EMERGENCY'
+                ? 'text-red-500 hover:text-red-400 hover:bg-red-950/50'
+                : 'text-slate-500 hover:text-red-600 hover:bg-red-50'
+            }`}
+            title="Sign Out"
+          >
+            <LogOut size={20} />
+          </button>
+        </div>
       </nav>
 
-      {/* --- MAIN CONTENT AREA --- */}
       <main className="max-w-7xl mx-auto p-6">
         
-        {/* =========================================================
-            MODE 1: CLINICAL DASHBOARD (Standard View)
-           ========================================================= */}
         {activeMode === 'CLINICAL' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            {/* LEFT: SCANNER & PATIENT INFO */}
             <div className="lg:col-span-4 space-y-6">
-               {/* 1. Scanner Card */}
                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm text-center">
                   {!patientScanned ? (
                     <div className="py-10">
@@ -219,26 +270,60 @@ export default function DoctorDashboard() {
                     <div className="text-left">
                        <div className="flex justify-between items-start mb-6">
                           <div>
-                            <h2 className="text-2xl font-bold text-slate-900">{MOCK_PATIENT.name}</h2>
-                            <p className="text-slate-500 text-sm">Age: {MOCK_PATIENT.age} • {MOCK_PATIENT.id}</p>
+                            <h2 className="text-2xl font-bold text-slate-900">{patientData?.name || "Unknown"}</h2>
+                            <p className="text-slate-500 text-sm">{patientData?.patient_id || patientData?.id || "-"}</p>
                           </div>
-                          <button onClick={() => setPatientScanned(false)} className="p-2 hover:bg-slate-100 rounded-full">
+                          <button onClick={() => { setPatientScanned(false); setPatientData(null); }} className="p-2 hover:bg-slate-100 rounded-full">
                             <X size={20} className="text-slate-400" />
                           </button>
                        </div>
 
+                       {patientError && (
+                         <div className="p-3 bg-red-50 border border-red-200 rounded-lg mb-4 text-sm text-red-600">
+                           {patientError}
+                         </div>
+                       )}
+
                        <div className="space-y-4">
                           <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
                              <div className="text-xs font-bold text-blue-600 uppercase mb-1">Last Visit</div>
-                             <div className="text-sm font-medium text-slate-700">{MOCK_PATIENT.recentVisit}</div>
+                             <div className="text-sm font-medium text-slate-700">{patientData?.recent_visit || "No visits recorded"}</div>
                           </div>
 
                           <div>
                              <p className="text-xs font-bold text-slate-400 uppercase mb-2">Conditions</p>
                              <div className="flex flex-wrap gap-2">
-                               {MOCK_PATIENT.conditions.map(c => (
-                                 <span key={c} className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-medium">{c}</span>
-                               ))}
+                               {patientData?.conditions && patientData.conditions.length > 0 ? (
+                                 patientData.conditions.map(c => (
+                                   <span key={c} className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-medium">{c}</span>
+                                 ))
+                               ) : (
+                                 <span className="text-slate-500 text-sm">No conditions recorded</span>
+                               )}
+                             </div>
+                          </div>
+
+                          <div>
+                             <p className="text-xs font-bold text-slate-400 uppercase mb-2">Allergies</p>
+                             <div className="flex flex-wrap gap-2">
+                               {patientData?.allergies && patientData.allergies.length > 0 ? (
+                                 patientData.allergies.map(a => (
+                                   <span key={a} className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200">{a}</span>
+                                 ))
+                               ) : (
+                                 <span className="text-slate-500 text-sm">No known allergies</span>
+                               )}
+                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                             <div className="p-3 bg-slate-50 rounded-lg">
+                               <p className="text-xs text-slate-500 mb-1">Blood Type</p>
+                               <p className="font-bold text-slate-900">{patientData?.blood_type || "-"}</p>
+                             </div>
+                             <div className="p-3 bg-slate-50 rounded-lg">
+                               <p className="text-xs text-slate-500 mb-1">Contact</p>
+                               <p className="font-bold text-slate-900">{patientData?.phone || "-"}</p>
                              </div>
                           </div>
                        </div>
@@ -246,19 +331,18 @@ export default function DoctorDashboard() {
                   )}
                </div>
 
-               {/* 1.5 Request Access Card */}
                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                   <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <Search size={18} /> Request Patient Access
                   </h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Patient ABHA ID</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Patient ID</label>
                       <input 
                         type="text"
-                        placeholder="e.g., name@abha"
-                        value={patientAbhaId}
-                        onChange={(e) => setPatientAbhaId(e.target.value)}
+                        placeholder="e.g., PAT-12345"
+                        value={patientId}
+                        onChange={(e) => setPatientId(e.target.value)}
                         className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
                       />
                     </div>
@@ -282,7 +366,6 @@ export default function DoctorDashboard() {
                   </div>
                </div>
 
-               {/* 2. Gemini Assistant (Only appears after scan) */}
                {patientScanned && (
                  <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
                     <Sparkles className="absolute top-4 right-4 text-blue-300 opacity-50" size={40} />
@@ -306,7 +389,6 @@ export default function DoctorDashboard() {
                )}
             </div>
 
-            {/* RIGHT: PRESCRIPTION PAD */}
             <div className="lg:col-span-8">
                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm min-h-[600px] flex flex-col">
                   <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
@@ -319,7 +401,6 @@ export default function DoctorDashboard() {
                   <div className="p-8 flex-1 space-y-6 overflow-y-auto max-h-[600px]">
                      {patientScanned ? (
                        <>
-                         {/* 1. Diagnosis Section */}
                          <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Clinical Diagnosis</label>
                             <textarea 
@@ -328,7 +409,6 @@ export default function DoctorDashboard() {
                             ></textarea>
                          </div>
 
-                         {/* 2. Dynamic Medicine Table */}
                          <div>
                             <div className="flex justify-between items-end mb-2">
                               <label className="block text-xs font-bold text-slate-500 uppercase">Rx (Medications)</label>
@@ -343,11 +423,9 @@ export default function DoctorDashboard() {
                             <div className="space-y-3">
                               {prescribedMeds.map((med, index) => (
                                 <div key={index} className="flex gap-2 items-start group">
-                                  {/* Number */}
                                   <div className="pt-3 text-xs font-bold text-slate-300 w-4">{index + 1}.</div>
                                   
                                   <div className="flex-1 grid grid-cols-12 gap-2">
-                                    {/* Medicine Name */}
                                     <div className="col-span-4">
                                       <input 
                                         type="text" 
@@ -358,7 +436,6 @@ export default function DoctorDashboard() {
                                       />
                                     </div>
 
-                                    {/* Dosage (e.g. 1-0-1) */}
                                     <div className="col-span-2">
                                       <input 
                                         type="text" 
@@ -369,7 +446,6 @@ export default function DoctorDashboard() {
                                       />
                                     </div>
 
-                                    {/* Timing Dropdown */}
                                     <div className="col-span-3">
                                       <select 
                                         value={med.timing}
@@ -383,7 +459,6 @@ export default function DoctorDashboard() {
                                       </select>
                                     </div>
 
-                                    {/* Note / Problem */}
                                     <div className="col-span-3">
                                       <input 
                                         type="text" 
@@ -395,7 +470,6 @@ export default function DoctorDashboard() {
                                     </div>
                                   </div>
 
-                                  {/* Delete Button */}
                                   <button 
                                     onClick={() => removeMedication(index)}
                                     className="p-2 text-slate-300 hover:text-red-500 transition-colors"
@@ -407,7 +481,6 @@ export default function DoctorDashboard() {
                             </div>
                          </div>
                          
-                         {/* 3. Footer Actions */}
                          <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Additional Advice</label>
                             <input type="text" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm" placeholder="e.g. Drink plenty of water, rest for 2 days..." />
@@ -421,7 +494,6 @@ export default function DoctorDashboard() {
                          </div>
                        </>
                      ) : (
-                       /* EMPTY STATE (When no patient scanned) */
                        <div className="h-full flex flex-col items-center justify-center text-slate-300 mt-20">
                           <QrCode size={64} className="mb-4 opacity-50" />
                           <p className="font-medium">Scan patient to enable prescription pad</p>
@@ -433,13 +505,9 @@ export default function DoctorDashboard() {
           </div>
         )}
 
-        {/* =========================================================
-            MODE 2: EMERGENCY PROTOCOL (Separate View)
-           ========================================================= */}
         {activeMode === 'EMERGENCY' && (
            <div className="max-w-4xl mx-auto mt-10">
              
-             {/* STEP 1: SELECTION */}
              {emergencyStep === 'SELECTION' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <button 
@@ -466,10 +534,8 @@ export default function DoctorDashboard() {
                 </div>
              )}
 
-             {/* STEP 2: CRITICAL DATA VIEW */}
              {emergencyStep === 'DATA' && (
                 <div className="bg-slate-900 border border-red-900/50 rounded-3xl overflow-hidden shadow-2xl shadow-red-900/20">
-                   {/* Emergency Header */}
                    <div className="bg-red-600 p-6 flex justify-between items-center">
                       <div className="flex items-center gap-4">
                          <div className="h-16 w-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md">
@@ -511,8 +577,6 @@ export default function DoctorDashboard() {
                          </div>
                       </div>
                    </div>
-
-                   {/* --- ADD THIS INSIDE THE EMERGENCY DATA GRID --- */}
 
 <div className="col-span-1 md:col-span-2 mt-4">
   <div className="bg-red-950/30 border border-red-500/30 p-4 rounded-xl flex items-start gap-4">

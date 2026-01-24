@@ -6,7 +6,7 @@ import {
   Building2, Phone, Fingerprint, CreditCard, Lock, Mail, Loader 
 } from "lucide-react"; //like a library of icons
 import Link from "next/link";// for linking between pages faster than <a href
-import { patientLogin, saveAuthToken, saveUserInfo } from "@/lib/api";
+import { patientLogin, doctorLogin, saveAuthToken, saveUserInfo } from "@/lib/api";
 
 export default function LoginPage() { //export default mean it treat login page as a component
   const router = useRouter(); //give u access to next.js navigation methods
@@ -20,10 +20,13 @@ export default function LoginPage() { //export default mean it treat login page 
   //patientStep can be either "DETAILS" or "OTP" initially set to "DETAILS"
   //when patient enter send otp then patientStep set to otp and show otp page"
 
-  const [patientData, setPatientData] = useState({ phone: "", aadhaar: "", abha: "" });
+  const [patientData, setPatientData] = useState({ phone: "", aadhaar: "" });
   //store all patient input data like phone,aadhaar,abha in one object
 
   const [otp, setOtp] = useState(""); //store otp enter by user
+
+  // --- DOCTOR STATE ---
+  const [doctorData, setDoctorData] = useState({ doctorid: "", hospitalid: "", password: "" });
 
   const [isLoading, setIsLoading] = useState(false); //track loading state for API calls
   const [error, setError] = useState(""); //store any error messages
@@ -34,18 +37,33 @@ export default function LoginPage() { //export default mean it treat login page 
   
   // --- HANDLERS ---
 
-  const handlePatientLogin = async (e: React.FormEvent) => { //function execute when patient form is submitted
+  const handlePatientLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     if (patientStep === "DETAILS") {
-      //if patientStep is details then we move to otp step
-      setPatientStep("OTP"); //set the patient step to otp
+      if (!patientData.phone && !patientData.aadhaar) {
+        setError("Please enter either mobile number or aadhaar number");
+        return;
+      }
+      // Generate a test OTP for development
+      const testOTP = Math.floor(1000 + Math.random() * 9000).toString();
+      console.log(`🔐 TEST OTP: ${testOTP}`);
+      setPatientStep("OTP");
     } else {
       // Call the backend API for patient login
+      if (!patientData.phone && !patientData.aadhaar) {
+        setError("Please enter either mobile number or aadhaar number");
+        setPatientStep("DETAILS");
+        return;
+      }
       setIsLoading(true);
       try {
-        const response = await patientLogin({ abhaid: patientData.abha });
+        const response = await patientLogin({ 
+          phone: patientData.phone || undefined,
+          aadhaar: patientData.aadhaar || undefined,
+          otp: otp
+        });
         
         if (response.success && response.data) {
           // Save auth token and user info
@@ -65,18 +83,52 @@ export default function LoginPage() { //export default mean it treat login page 
     }
   };
 
-  const handleDoctorSubmit = (e: React.FormEvent) => {
+  const handleDoctorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Logic: In a real app, this would verify credentials with backend
-    router.push("/doctor/dashboard"); // Redirect to Doctor Dashboard
+    setError("");
+    setIsLoading(true);
+    
+    try {
+      // Validate input
+      if (!doctorData.doctorid.trim() || !doctorData.hospitalid.trim() || !doctorData.password.trim()) {
+        setError("Please fill in all fields");
+        setIsLoading(false);
+        return;
+      }
+
+      // Call doctor login API
+      const response = await doctorLogin({
+        doctorid: doctorData.doctorid,
+        hospitalid: doctorData.hospitalid,
+        password: doctorData.password,
+      });
+
+      if (response.success && response.data) {
+        // Save auth token and doctor info
+        saveAuthToken(response.data.token);
+        saveUserInfo(response.data.doctor);
+        
+        // Clear form
+        setDoctorData({ doctorid: "", hospitalid: "", password: "" });
+        
+        // Redirect to Doctor Dashboard
+        router.push("/doctor/dashboard");
+      } else {
+        setError(response.error || "Login failed. Please check your credentials.");
+      }
+    } catch (err) {
+      console.error("Doctor login error:", err);
+      setError("Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
       
       
-      {/* HEADER LOGO */}
-      <div className="mb-8 text-center">
+<div className="mb-8 text-center">
         <div className="inline-flex items-center gap-2 text-2xl font-bold text-slate-800">
           <div className="bg-blue-600 p-2 rounded-xl">
              <Stethoscope className="text-white h-6 w-6" />
@@ -86,10 +138,8 @@ export default function LoginPage() { //export default mean it treat login page 
         <p className="text-slate-500 text-sm mt-2">Secure Unified Health Interface</p>
       </div>
 
-      {/* LOGIN CARD */}
       <div className="bg-white w-full max-w-md rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
         
-        {/* TABS (Patient vs Doctor) */}
         <div className="flex border-b border-slate-100">
           <button 
             onClick={() => setActiveTab("PATIENT")}
@@ -107,51 +157,32 @@ export default function LoginPage() { //export default mean it treat login page 
 
         <div className="p-8">
           
-          {/* ================= PATIENT FORM ================= */}
           {activeTab === 'PATIENT' && (
             <form onSubmit={handlePatientLogin} className="space-y-4">
               {patientStep === "DETAILS" ? (
                 <>
                   <div className="space-y-4">
-                     {/* Phone Input */}
                      <div>
                         <label className="text-xs font-bold text-slate-500 uppercase ml-1">Mobile Number</label>
                         <div className="relative mt-1">
                            <Phone className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
                            <input 
-                             type="tel" 
-                             required
+                             type="tel"
                              className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm font-bold text-slate-700"
                              placeholder="+91 98765 43210"
                              onChange={(e) => setPatientData({...patientData, phone: e.target.value})}
                            />
                         </div>
                      </div>
-                     {/* Aadhaar Input */}
                      <div>
                         <label className="text-xs font-bold text-slate-500 uppercase ml-1">Aadhaar Number</label>
                         <div className="relative mt-1">
                            <Fingerprint className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
                            <input 
-                             type="text" 
-                             required
+                             type="text"
                              className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm font-bold text-slate-700"
                              placeholder="1234 5678 9012"
                              onChange={(e) => setPatientData({...patientData, aadhaar: e.target.value})}
-                           />
-                        </div>
-                     </div>
-                     {/* ABHA Input */}
-                     <div>
-                        <label className="text-xs font-bold text-slate-500 uppercase ml-1">ABHA ID</label>
-                        <div className="relative mt-1">
-                           <CreditCard className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
-                           <input 
-                             type="text" 
-                             required
-                             className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm font-bold text-slate-700"
-                             placeholder="name@abha"
-                             onChange={(e) => setPatientData({...patientData, abha: e.target.value})}
                            />
                         </div>
                      </div>
@@ -162,7 +193,6 @@ export default function LoginPage() { //export default mean it treat login page 
                   </button>
                 </>
               ) : (
-                /* OTP VIEW */
                 <div className="text-center space-y-6">
                    <div className="h-16 w-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto">
                       <ShieldCheck className="text-blue-600 h-8 w-8" />
@@ -193,11 +223,9 @@ export default function LoginPage() { //export default mean it treat login page 
             </form>
           )}
 
-          {/* ================= DOCTOR FORM ================= */}
           {activeTab === 'DOCTOR' && (
             <form onSubmit={handleDoctorSubmit} className="space-y-4">
               
-              {/* Toggle Sign In / Sign Up */}
               <div className="flex justify-center mb-6">
                  <div className="bg-slate-100 p-1 rounded-lg inline-flex">
                     <button 
@@ -217,7 +245,6 @@ export default function LoginPage() { //export default mean it treat login page 
                  </div>
               </div>
 
-              {/* SIGN UP FIELDS (Only show if Sign Up is selected) */}
               {doctorMode === "SIGNUP" && (
                 <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
                    <div className="grid grid-cols-2 gap-3">
@@ -241,14 +268,26 @@ export default function LoginPage() { //export default mean it treat login page 
                 </div>
               )}
 
-              {/* COMMON FIELDS (ID & Password) */}
               <div className="space-y-3">
                  <div className="relative">
                     <Building2 className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
                     <input 
                       required
                       type="text" 
-                      placeholder={doctorMode === "SIGNUP" ? "Hospital License ID" : "Doctor / Hospital ID"} 
+                      placeholder={doctorMode === "SIGNUP" ? "Hospital License ID" : "Doctor ID"} 
+                      value={doctorData.doctorid}
+                      onChange={(e) => setDoctorData({...doctorData, doctorid: e.target.value})}
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:outline-none text-sm font-bold text-slate-700"
+                    />
+                 </div>
+                 <div className="relative">
+                    <Building2 className="absolute left-3 top-3 text-slate-400 h-4 w-4" />
+                    <input 
+                      required
+                      type="text" 
+                      placeholder="Hospital ID"
+                      value={doctorData.hospitalid}
+                      onChange={(e) => setDoctorData({...doctorData, hospitalid: e.target.value})}
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:outline-none text-sm font-bold text-slate-700"
                     />
                  </div>
@@ -258,13 +297,21 @@ export default function LoginPage() { //export default mean it treat login page 
                       required
                       type="password" 
                       placeholder={doctorMode === "SIGNUP" ? "Create Password" : "Password"}
+                      value={doctorData.password}
+                      onChange={(e) => setDoctorData({...doctorData, password: e.target.value})}
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:outline-none text-sm font-bold text-slate-700"
                     />
                  </div>
               </div>
 
-              <button type="submit" className="w-full py-3 bg-green-600 text-white font-bold rounded-xl mt-2 hover:bg-green-700 transition shadow-lg shadow-green-200 flex items-center justify-center gap-2">
-                 {doctorMode === "SIGNIN" ? "Access Dashboard" : "Register Profile"} <ArrowRight size={16} />
+              {error && <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">{error}</div>}
+
+              <button type="submit" disabled={isLoading} className="w-full py-3 bg-green-600 text-white font-bold rounded-xl mt-2 hover:bg-green-700 transition shadow-lg shadow-green-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                 {isLoading ? (
+                   <><Loader className="animate-spin" size={16} /> {doctorMode === "SIGNIN" ? "Logging in..." : "Registering..."}</>
+                 ) : (
+                   <>{doctorMode === "SIGNIN" ? "Access Dashboard" : "Register Profile"} <ArrowRight size={16} /></>
+                 )}
               </button>
             </form>
           )}

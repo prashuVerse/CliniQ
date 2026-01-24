@@ -11,6 +11,7 @@ import (
 	"github.com/PrasadNaik1310/CliniQ/db"
 	"github.com/PrasadNaik1310/CliniQ/handlers"
 	"github.com/PrasadNaik1310/CliniQ/middleware"
+	"github.com/PrasadNaik1310/CliniQ/seeds"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -42,6 +43,9 @@ func main() {
 		log.Fatal(err)
 		log.Println("Stopped execution")
 	}
+
+	// Seed database with test data
+	seeds.SeedDatabase()
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -104,6 +108,15 @@ func main() {
 			qr.POST("/scan", handlers.ScanQRCode)
 			qr.GET("/my-tokens", handlers.GetMyAccessTokens)
 			qr.DELETE("/:id", handlers.RevokeAccessToken)
+		}
+
+		// Doctor patient data endpoints
+		doctor := api.Group("/doctor")
+		doctor.Use(middleware.AuthMiddleware())
+		doctor.Use(middleware.DoctorOnly())
+		{
+			doctor.GET("/patient/:id", handlers.GetPatientDataForDoctor)
+			doctor.GET("/patient-by-qr", handlers.GetPatientByQRToken)
 		}
 
 		// Read PORT from environment or default to 8080

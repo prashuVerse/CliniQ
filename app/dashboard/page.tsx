@@ -1,7 +1,9 @@
 "use client";
 import { useState } from "react";
 import { AppProvider, useAppContext, type MedicalRecord, type Reminder } from "../../lib/store";
-import { UploadCloud, FileText, Sparkles, Activity, Clock, Plus, Trash2, Bell, BellOff, Calendar } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { clearAuth } from "@/lib/api";
+import { UploadCloud, FileText, Sparkles, Activity, Clock, Plus, Trash2, Bell, BellOff, Calendar, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 
@@ -15,10 +17,16 @@ export default function DashboardPage() { //treat dashboard page as a component
 }
 
 function PatientDashboardContent() {
+  const router = useRouter();
   const { 
     patientName, records, addRecord, allergies, conditions, 
     reminders, addReminder, toggleReminder, deleteReminder 
   } = useAppContext();
+
+  const handleSignOut = () => {
+    clearAuth();
+    router.push("/auth/login");
+  };
  // the app context contiains the patient data so we are taking the data from there and storing in these variables
 
   const [isUploading, setIsUploading] = useState(false);
@@ -70,7 +78,6 @@ function PatientDashboardContent() {
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
       
-      {/* Top Navbar */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2 font-bold text-xl text-slate-800">
           <div className="bg-blue-600 p-1.5 rounded-lg">
@@ -86,15 +93,20 @@ function PatientDashboardContent() {
            <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
               {patientName.charAt(0)}
            </div>
+           <button
+             onClick={handleSignOut}
+             className="ml-4 p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+             title="Sign Out"
+           >
+             <LogOut size={20} />
+           </button>
         </div>
       </nav>
 
       <div className="max-w-7xl mx-auto w-full p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* === COLUMN 1: UPLOAD & HEALTH PROFILE (3 Cols) === */}
         <div className="lg:col-span-3 space-y-6">
           
-          {/* Upload Card */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
              <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -119,7 +131,6 @@ function PatientDashboardContent() {
              </div>
           </div>
 
-          {/* Health Profile */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
             <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Health Profile</h2>
             
@@ -148,7 +159,6 @@ function PatientDashboardContent() {
           </div>
         </div>
 
-        {/* === COLUMN 2: TIMELINE (5 Cols) === */}
         <div className="lg:col-span-5">
            <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
              <Activity className="text-blue-600" /> Medical Timeline
@@ -163,10 +173,8 @@ function PatientDashboardContent() {
                    animate={{ opacity: 1, x: 0 }}
                    className="relative group"
                  >
-                   {/* Dot */}
                    <div className="absolute -left-[41px] top-1 h-5 w-5 rounded-full border-4 border-slate-50 bg-blue-500 shadow-sm"></div>
                    
-                   {/* Card */}
                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex justify-between items-start mb-2">
                          <div>
@@ -178,7 +186,6 @@ function PatientDashboardContent() {
                          </span>
                       </div>
                       
-                      {/* AI Summary */}
                       <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 mt-3 relative">
                          <Sparkles className="absolute top-2 right-2 text-blue-400 w-3 h-3" />
                          <p className="text-sm text-slate-700 leading-relaxed">
@@ -193,17 +200,14 @@ function PatientDashboardContent() {
            </div>
         </div>
 
-        {/* === COLUMN 3: MEDICINE CABINET (4 Cols) === */}
         <div className="lg:col-span-4 space-y-6">
            
-           {/* Medicine Cabinet Header */}
            <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                  <Clock className="text-purple-600" /> Medicine Cabinet
               </h2>
            </div>
 
-           {/* Add Reminder Form */}
            <div className="bg-white p-5 rounded-2xl border border-purple-100 shadow-sm">
               <h3 className="text-sm font-bold text-slate-700 mb-3">Set New Reminder</h3>
               <form onSubmit={handleAddReminder} className="space-y-3">
@@ -233,7 +237,6 @@ function PatientDashboardContent() {
               </form>
            </div>
 
-           {/* Active Reminders List */}
            <div className="space-y-3">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Active Schedules</h3>
               

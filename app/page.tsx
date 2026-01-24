@@ -5,7 +5,6 @@ import { ShieldAlert, BrainCircuit, Stethoscope, Lock, ArrowRight, User } from "
 export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col font-sans">
-      {/* Navbar */}
       <nav className="fixed w-full z-50 glass-panel">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-xl text-slate-800">
@@ -15,13 +14,11 @@ export default function LandingPage() {
             VitalSync
           </div>
           <div className="flex gap-4">
-            {/* UPDATED LINK */}
             <Link href="/auth/login" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition">Log In</Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
       <main className="flex-1 pt-32 pb-16 px-6">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-sm font-semibold">
@@ -40,10 +37,8 @@ export default function LandingPage() {
           </p>
         </div>
 
-        {/* Role Selection Cards */}
         <div className="max-w-5xl mx-auto mt-16 grid md:grid-cols-3 gap-6">
           
-          {/* Patient Card - UPDATED LINK */}
           <Link href="/auth/login" className="clinical-card p-8 hover:border-blue-400 group relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
             <div className="h-12 w-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-4 group-hover:scale-110 transition">
@@ -56,7 +51,6 @@ export default function LandingPage() {
             </div>
           </Link>
 
-          {/* Doctor Card - UPDATED LINK */}
           <Link href="/auth/login" className="clinical-card p-8 hover:border-green-400 group relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
             <div className="h-12 w-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-4 group-hover:scale-110 transition">
@@ -69,7 +63,6 @@ export default function LandingPage() {
             </div>
           </Link>
 
-          {/* Emergency Card - UPDATED LINK (Emergency now goes through Doctor Login) */}
           <Link href="/auth/login" className="clinical-card p-8 bg-red-50/50 hover:bg-red-50 border-red-100 hover:border-red-400 group relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
             <div className="h-12 w-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600 mb-4 group-hover:scale-110 transition">
