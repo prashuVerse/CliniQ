@@ -54,12 +54,14 @@ export default function LoginPage() {
 
       // Generate a test OTP
       const testOTP = Math.floor(1000 + Math.random() * 9000).toString();
-      console.log(`🔐 TEST OTP: ${testOTP}`);
+      console.log(` TEST OTP: ${testOTP}`);
       setPatientStep("OTP");
     } else {
       // OTP VERIFICATION STEP
       setIsLoading(true);
       try {
+  
+        const abhaid = patientData.abhaid || patientData.aadhaar || patientData.phone;
         const response = await patientLogin({ 
           phone: patientData.phone,
           aadhaar: patientData.aadhaar, // Will be empty string
