@@ -9,5 +9,7 @@ services:
       - key: JWT_SECRET
         scope: run
         value: ${JWT_SECRET}
-      - key: PORT
-        value: 8080
+      - key: DATABASE_URL
+        scope: run
+        value: ${DATABASE_URL}
+
