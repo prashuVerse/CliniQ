@@ -34,3 +34,11 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+Problem Statement:
+Healthcare data is scattered across PDFs, prescriptions, lab reports, and hospital portals. During OPD visits and follow-ups, patients struggle to present organized medical history, while doctors waste time navigating unstructured documents. This leads to inefficiency, missed context, and increased risk of medical errors.
+
+Proposed solution:
+We propose a patient-controlled digital health record platform that allows users to securely upload their medical documents and automatically generate a structured health timeline using AI.
+
+Patients can share selected medical data with doctors during OPD visits through temporary QR-based or link-based access, enabling fast, read-only viewing without permanent data sharing. The platform prioritizes consent-based access, data security, and minimal exposure of sensitive information, improving clinical efficiency and patient experience.
