@@ -137,7 +137,6 @@ async function makeRequest<T>(
     return {
       success: false,
       error: errorMessage,
-      error: errorMessage,
     };
   }
 }
