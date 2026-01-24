@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -18,4 +20,6 @@ type ViewRequest struct {
 	Requesterid string     `json:"requesterid"`
 	Target_id   string     `json:"targetid"`
 	Status      statusType `json:"status"`
+	AcceptedAt  *time.Time `json:"acceptedat"`
+	RejectedAt  *time.Time `json:"rejectedat"`
 }
