@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: cliniq-backend
+    runtime: go
+    rootDir: .
+    buildCommand: go build -o main ./cmd/main.go
+    startCommand: ./main
+    envVars:
+      - key: JWT_SECRET
+        scope: run
+        value: ${JWT_SECRET}
+      - key: DATABASE_URL
+        scope: run
+        value: ${DATABASE_URL}
+      - key: PORT
+        value: 8080
