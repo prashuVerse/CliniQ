@@ -2,7 +2,9 @@ package db
 
 import (
 	"log"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/PrasadNaik1310/CliniQ/models"
@@ -21,8 +23,19 @@ func DbInit() error {
 		return nil // Never reached, but satisfies return type
 	}
 
-	// Set connection timeout and SSL mode if not already in URL
-	if !contains(dsn, "connect_timeout") {
+	// Add connection timeout if it's a URL format and not already present
+	if strings.HasPrefix(dsn, "postgresql://") || strings.HasPrefix(dsn, "postgres://") {
+		if !strings.Contains(dsn, "connect_timeout") {
+			// Parse and add connect_timeout as query parameter
+			if u, err := url.Parse(dsn); err == nil {
+				q := u.Query()
+				q.Set("connect_timeout", "10")
+				u.RawQuery = q.Encode()
+				dsn = u.String()
+			}
+		}
+	} else if !strings.Contains(dsn, "connect_timeout") {
+		// DSN format (key=value pairs)
 		dsn += " connect_timeout=10"
 	}
 
@@ -68,18 +81,4 @@ func DbInit() error {
 	log.Printf("accessrequest migrated")
 	log.Printf("DB Chaluuuuuuuuuu")
 	return nil
-}
-
-// Helper function to check if string contains substring
-func contains(s, substr string) bool {
-	return len(s) > 0 && len(substr) > 0 && (s == substr || len(s) > len(substr) && (s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || findSubstring(s, substr)))
-}
-
-func findSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
