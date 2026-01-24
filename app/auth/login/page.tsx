@@ -61,7 +61,7 @@ export default function LoginPage() {
       setIsLoading(true);
       try {
   
-        const abhaid = patientData.abhaid || patientData.aadhaar || patientData.phone;
+        const abhaid = patientData.aadhaar || patientData.phone;
         const response = await patientLogin({ 
           phone: patientData.phone,
           aadhaar: patientData.aadhaar, // Will be empty string
