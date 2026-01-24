@@ -153,7 +153,7 @@ func ScanQRCode(c *gin.Context) {
 	// Create a temporary access grant using correct field names
 	grant := models.AcessGrant{
 		AccessId:  accessToken.Token,
-		ViewerId:  fmt.Sprintf("%d", uid),       // Doctor ID
+		ViewerId:  fmt.Sprintf("%d", uid),                   // Doctor ID
 		OwnerId:   fmt.Sprintf("%d", accessToken.PatientID), // Patient ID
 		Scope:     accessToken.AccessLevel,
 		ExpiresAt: accessToken.ExpiresAt,
