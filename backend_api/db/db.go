@@ -75,10 +75,20 @@ func DbInit() error {
 		log.Print("failed to Automigrate Doctors")
 		return err
 	}
+	if err := DB.AutoMigrate(&models.Prescription{}); err != nil {
+		log.Print("failed to Automigrate Prescriptions")
+		return err
+	}
+	if err := DB.AutoMigrate(&models.TemporaryAccessToken{}); err != nil {
+		log.Print("failed to Automigrate TemporaryAccessTokens")
+		return err
+	}
 	log.Printf("user migrated")
 	log.Printf("Doctor migrated")
 	log.Printf("viewrequest migrated")
 	log.Printf("accessrequest migrated")
+	log.Printf("prescription migrated")
+	log.Printf("temporary access token migrated")
 	log.Printf("DB Chaluuuuuuuuuu")
 	return nil
 }

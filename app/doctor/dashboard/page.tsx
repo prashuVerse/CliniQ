@@ -119,11 +119,28 @@ export default function DoctorDashboard() {
     }, 2000); // 2 second scan simulation
   };
 
-  const handleGeminiSummary = () => {
+  const handleGeminiSummary = async () => {
     setGeminiSummary("Analyzing...");
-    setTimeout(() => {
-      setGeminiSummary("Patient has a history of Type 2 Diabetes (5 years). Recent ECG shows normal sinus rhythm. Adherence to Metformin is consistent. Warning: Potential interaction with new prescription if prescribing Beta Blockers.");
-    }, 1500);
+    try {
+      // Get patient history and prescriptions from the UI
+      const patientHistory = "Patient with Type 2 Diabetes, hypertension. Recent ECG normal.";
+      const prescriptions = "Metformin 500mg BD, Lisinopril 10mg OD";
+
+      // Call the Gemini API via backend
+      const { analyzePrescriptions } = await import("@/lib/api");
+      const response = await analyzePrescriptions(patientHistory, prescriptions);
+
+      if (response.success && response.data) {
+        setGeminiSummary(response.data.analysis);
+      } else {
+        setGeminiSummary(
+          "Error analyzing patient data: " + (response.error || "Unknown error")
+        );
+      }
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+      setGeminiSummary("Failed to analyze patient data. Please try again.");
+    }
   };
 
   const toggleEmergency = () => {

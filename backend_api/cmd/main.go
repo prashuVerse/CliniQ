@@ -79,6 +79,33 @@ func main() {
 			}
 		}
 
+		// Protected prescription endpoints
+		prescription := api.Group("/prescription")
+		prescription.Use(middleware.AuthMiddleware())
+		{
+			prescription.POST("/upload", handlers.UploadPrescription)
+			prescription.GET("/list", handlers.GetPrescriptions)
+			prescription.DELETE("/:id", handlers.DeletePrescription)
+			prescription.GET("/download/:id", handlers.DownloadPrescription)
+		}
+
+		// Protected AI analysis endpoints
+		ai := api.Group("/ai")
+		ai.Use(middleware.AuthMiddleware())
+		{
+			ai.POST("/analyze", handlers.AnalyzePrescriptions)
+		}
+
+		// Protected QR code endpoints
+		qr := api.Group("/qr")
+		qr.Use(middleware.AuthMiddleware())
+		{
+			qr.POST("/generate", handlers.GenerateQRCode)
+			qr.POST("/scan", handlers.ScanQRCode)
+			qr.GET("/my-tokens", handlers.GetMyAccessTokens)
+			qr.DELETE("/:id", handlers.RevokeAccessToken)
+		}
+
 		// Read PORT from environment or default to 8080
 		port := os.Getenv("PORT")
 		if port == "" {
