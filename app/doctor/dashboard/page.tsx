@@ -125,7 +125,9 @@ export default function DoctorDashboard() {
       const response = await analyzePrescriptions(patientHistory, prescriptions);
 
       if (response.success && response.data) {
-        setGeminiSummary(response.data.analysis);
+        // Handle both string and object responses
+        const analysisData = typeof response.data === 'string' ? response.data : response.data.analysis || JSON.stringify(response.data);
+        setGeminiSummary(analysisData);
       } else {
         setGeminiSummary(
           "Error analyzing patient data: " + (response.error || "Unknown error")
@@ -133,7 +135,8 @@ export default function DoctorDashboard() {
       }
     } catch (error) {
       console.error("Error calling Gemini API:", error);
-      setGeminiSummary("Failed to analyze patient data. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setGeminiSummary(`Failed to analyze patient data: ${errorMessage}`);
     }
   };
 

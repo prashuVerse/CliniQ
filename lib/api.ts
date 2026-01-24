@@ -95,7 +95,19 @@ async function makeRequest<T>(
       headers,
     });
 
-    const data = await response.json();
+    let data;
+    try {
+      // Read response as text first to avoid "body stream already read" error
+      const responseText = await response.text();
+      
+      // Try to parse as JSON
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (parseError) {
+      console.error(`⚠️ JSON PARSE ERROR: ${method} ${endpoint}`, {
+        parseError: parseError instanceof Error ? parseError.message : "Unknown parse error",
+      });
+      data = { error: `Invalid JSON response: ${parseError instanceof Error ? parseError.message : "Unknown error"}` };
+    }
 
     // Log response
     console.log(`📡 API RESPONSE: ${method} ${endpoint}`, {

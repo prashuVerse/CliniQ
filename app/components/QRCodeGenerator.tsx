@@ -297,7 +297,7 @@ export default function QRCodeGenerator() {
                       </div>
 
                       <p className="text-xs text-gray-500">
-                        Created: {new Date(token.created_at).toLocaleString()}
+                        Expires: {new Date(token.expires_at).toLocaleString()}
                       </p>
                     </div>
 
