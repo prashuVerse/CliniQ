@@ -48,12 +48,14 @@ func main() {
 		auth := api.Group("/auth")
 		{
 			auth.POST("/patient", handlers.PatientLogin)
-			//auth.POST("/doc", handlers.Doctor)
+			auth.POST("/doctor", handlers.DoctorLogin)
 		}
 		viewAccess := api.Group("/consent")
 		{
 			viewAccess.GET("/viewRequest", handlers.ViewRequest)
 			viewAccess.POST("/askRequest", handlers.AskRequest)
+			viewAccess.POST("/acceptRequest", handlers.AcceptRequest)
+			viewAccess.POST("/rejectRequest", handlers.RejectRequest)
 		}
 
 		go func() {
