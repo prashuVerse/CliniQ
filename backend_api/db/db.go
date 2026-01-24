@@ -2,11 +2,11 @@ package db
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/PrasadNaik1310/CliniQ/models"
-	_ "github.com/go-sql-driver/mysql"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -14,8 +14,15 @@ import (
 var DB *gorm.DB
 
 func DbInit() error {
-	dsn := "root:password@tcp(127.0.0.1:3306)/Cliniq?charset=utf8mb4&parseTime=True&loc=Local" //CHANGE IN PROD
-	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+	// Get database URL from environment variable
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		// Fallback for local development
+		dsn = "host=localhost user=postgres password=postgres dbname=cliniq port=5432 sslmode=disable"
+		log.Print("DATABASE_URL not found, using default local connection")
+	}
+
+	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/PrasadNaik1310/CliniQ/db"
 	"github.com/PrasadNaik1310/CliniQ/handlers"
+	"github.com/PrasadNaik1310/CliniQ/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -20,6 +21,11 @@ func main() {
 	} //useful in prod
 	r := gin.Default()
 
+	// Apply global middleware
+	r.Use(middleware.ErrorHandler())
+	r.Use(middleware.RequestLogging())
+
+	// CORS middleware
 	r.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*") //change this in prod
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST,GET,PUT,DELETE,UPDATE,OPTIONS")
@@ -30,6 +36,7 @@ func main() {
 		}
 		c.Next()
 	})
+
 	err := db.DbInit()
 	if err != nil {
 		log.Fatal(err)
@@ -50,12 +57,26 @@ func main() {
 			auth.POST("/patient", handlers.PatientLogin)
 			auth.POST("/doctor", handlers.DoctorLogin)
 		}
-		viewAccess := api.Group("/consent")
+
+		// Protected consent endpoints
+		consent := api.Group("/consent")
+		consent.Use(middleware.AuthMiddleware())
 		{
-			viewAccess.GET("/viewRequest", handlers.ViewRequest)
-			viewAccess.POST("/askRequest", handlers.AskRequest)
-			viewAccess.POST("/acceptRequest", handlers.AcceptRequest)
-			viewAccess.POST("/rejectRequest", handlers.RejectRequest)
+			// Patient endpoints
+			patientEndpoints := consent.Group("")
+			patientEndpoints.Use(middleware.PatientOnly())
+			{
+				patientEndpoints.GET("/viewRequest", handlers.ViewRequest)
+				patientEndpoints.POST("/acceptRequest", handlers.AcceptRequest)
+				patientEndpoints.POST("/rejectRequest", handlers.RejectRequest)
+			}
+
+			// Doctor endpoints
+			doctorEndpoints := consent.Group("")
+			doctorEndpoints.Use(middleware.DoctorOnly())
+			{
+				doctorEndpoints.POST("/askRequest", handlers.AskRequest)
+			}
 		}
 
 		go func() {
