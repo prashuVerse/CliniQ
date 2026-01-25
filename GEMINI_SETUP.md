@@ -27,7 +27,7 @@ The CliniQ system now integrates Google's Gemini API for AI-powered medical anal
 Set the environment variable directly:
 ```bash
 export GEMINI_API_KEY
-```
+`````
 
 Or in your deployment platform (e.g., Render):
 1. Go to your service settings
