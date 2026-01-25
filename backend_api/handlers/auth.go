@@ -44,7 +44,7 @@ import (
 func PatientLogin(c *gin.Context) {
 	var credentials struct {
 		//	Username string `json:"username"`
-		Phoneno string `json:"phoneno"`
+		Phone string `json:"phone"`
 	}
 
 	if err := c.ShouldBindJSON(&credentials); err != nil {
@@ -52,14 +52,14 @@ func PatientLogin(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Login attempt for Phoneno: %s", credentials.Phoneno)
+	log.Printf("Login attempt for Phone: %s", credentials.Phone)
 
 	var patient models.User
-	if err := db.DB.Where("phoneno = ?", credentials.Phoneno).First(&patient).Error; err != nil {
-		log.Printf("User not found: %s", credentials.Phoneno)
+	/*if err := db.DB.Where("phone = ?", credentials.Phone).First(&patient).Error; err != nil {
+		log.Printf("User not found: %s", credentials.Phone)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
-	}
+	}*/
 
 	/*	if err := bcrypt.CompareHashAndPassword([]byte(patient.Password), []byte(credentials.Password)); err != nil {
 			log.Printf("Password mismatch for user: %s", credentials.Email)
@@ -72,12 +72,12 @@ func PatientLogin(c *gin.Context) {
 	secret := gotp.RandomSecret(16)
 	fmt.Println("random secret :", secret)
 
-	totp := gotp.NewDefaultTOTP(secret)
+	//totp := gotp.NewDefaultTOTP(secret)
 
-	currentOtp := totp.Now()
+	//currentOtp := totp.Now()
 
-	fmt.Println("current otp :-> ", currentOtp)
-	VerifyTotp(secret, "12345") // testinggggggggg , change in prod.
+	/*fmt.Println("current otp :-> ", currentOtp)
+	VerifyTotp(secret, "12345")*/ // testinggggggggg , change in prod.
 
 	// Get JWT secret from environment - SAME as middleware
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -104,14 +104,14 @@ func PatientLogin(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Token generated successfully for user: %s", credentials.Phoneno)
+	log.Printf("Token generated successfully for user: %s", credentials.Phone)
 
 	c.JSON(http.StatusOK, gin.H{
 		"token": tokenString,
 		"user": gin.H{
 			"user_id":    patient.ID,
 			"patient_id": patient.PatientId,
-			"phoneno":    patient.Phoneno,
+			"phone":      patient.Phoneno,
 		},
 	})
 }

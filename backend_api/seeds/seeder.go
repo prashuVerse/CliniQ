@@ -79,7 +79,13 @@ func seedPatients() {
 				log.Printf("✅ Created patient: %s (ID: %s)", patient.UserName, patient.PatientId)
 			}
 		} else {
-			log.Printf("⏭️ Patient already exists: %s", patient.UserName)
+			// Always update existing patient with correct plain phone format
+			db.DB.Model(&existing).Updates(models.User{
+				Phoneno: patient.Phoneno,
+				Aadhar:  patient.Aadhar,
+				AbhaId:  patient.AbhaId,
+			})
+			log.Printf("🔄 Updated patient: %s (Phone: %s)", patient.UserName, patient.Phoneno)
 		}
 	}
 }
