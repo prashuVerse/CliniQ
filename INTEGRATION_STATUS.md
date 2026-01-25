@@ -33,7 +33,7 @@
   - Success/error messages
   - Auto-refresh pending requests
 
-### 3. Patient Dashboard
+### 3. Patient Dashboard ##
 - **Page:** `/dashboard`
 - **Endpoints:** `GET /api/consent/viewRequest`
 - **Status:** 📋 Ready for integration

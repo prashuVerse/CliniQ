@@ -31,7 +31,7 @@ Current integration status and endpoint verification.
 | `DEPLOYMENT_CONFIG.md` | Deployment setup | 5 min |
 | `INTEGRATION_GUIDE.md` | Complete API specs | 10 min |
 
-### Code & Examples
+### Code & Examples##
 | File | Purpose | Read Time |
 |------|---------|-----------|
 | `API_USAGE_EXAMPLES.md` | Code patterns & examples | 10 min |

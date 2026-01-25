@@ -32,7 +32,7 @@ NEW: https://cliniq-65r8.onrender.com/api (Production)
 
 ---
 
-## 🚀 Get Started in 2 Minutes
+## 🚀 Get Started in 2 Minutes ##
 
 ### Step 1: Start the App
 ```bash

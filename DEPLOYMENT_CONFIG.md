@@ -37,7 +37,7 @@ curl -X POST https://cliniq-65r8.onrender.com/api/auth/patient \
   -d '{"abhaid": "test@abha"}'
 ```
 
-## Available Endpoints
+## Available Endpoints##
 
 All endpoints are now pointing to the production backend:
 

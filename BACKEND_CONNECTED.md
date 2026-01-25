@@ -32,7 +32,7 @@
 | Patient Login | ✅ Active | Uses production backend |
 | Doctor Dashboard | ✅ Active | Uses production backend |
 
----
+-----
 
 ## 🚀 How to Test
 
