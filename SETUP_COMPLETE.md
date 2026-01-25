@@ -29,7 +29,7 @@
 ### Step 1: Install Dependencies (if needed)
 ```bash
 npm install
-```
+`````
 
 ### Step 2: Start Development Server
 ```bash
