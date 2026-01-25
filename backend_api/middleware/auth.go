@@ -15,9 +15,12 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 
+		log.Printf("🔐 Auth check for %s %s from %s", c.Request.Method, c.Request.URL.Path, c.ClientIP())
+		log.Printf("   Authorization header present: %v (length: %d)", authHeader != "", len(authHeader))
+
 		if authHeader == "" {
-			log.Printf("Missing authorization header from %s", c.ClientIP())
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing authorization header"})
+			log.Printf("❌ Missing authorization header from %s", c.ClientIP())
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 			c.Abort()
 			return
 		}

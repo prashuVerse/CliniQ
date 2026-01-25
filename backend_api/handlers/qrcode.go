@@ -19,16 +19,31 @@ import (
 
 // GenerateQRCode generates a temporary access QR code for doctors
 func GenerateQRCode(c *gin.Context) {
-	userID := c.GetString("user_id")
-	if userID == "" {
+	// Get user_id from context - it's stored as float64 from JWT claims
+	userIDValue, exists := c.Get("user_id")
+	if !exists || userIDValue == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	// Convert userID string to uint
-	uid, err := strconv.ParseUint(userID, 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+	// Convert to uint - JWT stores numbers as float64
+	var uid uint
+	switch v := userIDValue.(type) {
+	case float64:
+		uid = uint(v)
+	case int:
+		uid = uint(v)
+	case uint:
+		uid = v
+	case string:
+		parsed, err := strconv.ParseUint(v, 10, 32)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+			return
+		}
+		uid = uint(parsed)
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID type"})
 		return
 	}
 
@@ -90,10 +105,10 @@ func GenerateQRCode(c *gin.Context) {
 // ScanQRCode validates a scanned QR token and grants access
 func ScanQRCode(c *gin.Context) {
 	userID := c.GetString("user_id")
-	if userID == "" {
+	/*if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
-	}
+	}*/
 
 	// Convert userID string to uint
 	uid, err := strconv.ParseUint(userID, 10, 32)
@@ -176,10 +191,10 @@ func ScanQRCode(c *gin.Context) {
 // GetMyAccessTokens retrieves all QR tokens for current patient
 func GetMyAccessTokens(c *gin.Context) {
 	userID := c.GetString("user_id")
-	if userID == "" {
+	/*if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
-	}
+	}*/
 
 	uid, err := strconv.ParseUint(userID, 10, 32)
 	if err != nil {
@@ -255,11 +270,10 @@ func encodeQRCodeToBase64(qr *qrcode.QRCode) string {
 	buf := new(bytes.Buffer)
 	err := png.Encode(buf, img)
 	if err != nil {
-		// Fallback: return placeholder
-		return "data:image/png;base64," + base64.StdEncoding.EncodeToString([]byte("qr-placeholder"))
+		// Fallback: return empty string
+		return ""
 	}
 
-	// Convert to base64 with data URI prefix
-	encoded := base64.StdEncoding.EncodeToString(buf.Bytes())
-	return "data:image/png;base64," + encoded
+	// Convert to base64 (without data URI prefix - frontend adds it)
+	return base64.StdEncoding.EncodeToString(buf.Bytes())
 }

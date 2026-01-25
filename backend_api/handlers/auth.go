@@ -43,7 +43,6 @@ import (
 
 func PatientLogin(c *gin.Context) {
 	var credentials struct {
-		//	Username string `json:"username"`
 		Phone string `json:"phone"`
 	}
 
@@ -55,31 +54,13 @@ func PatientLogin(c *gin.Context) {
 	log.Printf("Login attempt for Phone: %s", credentials.Phone)
 
 	var patient models.User
-	/*if err := db.DB.Where("phone = ?", credentials.Phone).First(&patient).Error; err != nil {
+	if err := db.DB.Where("phoneno = ?", credentials.Phone).First(&patient).Error; err != nil {
 		log.Printf("User not found: %s", credentials.Phone)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
-	}*/
+	}
 
-	/*	if err := bcrypt.CompareHashAndPassword([]byte(patient.Password), []byte(credentials.Password)); err != nil {
-			log.Printf("Password mismatch for user: %s", credentials.Email)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-			return
-		}
-	*/ // No passwords for patients , commenting for use of doctor login .
-	//using otp generation .
-	// using gotp , totp
-	secret := gotp.RandomSecret(16)
-	fmt.Println("random secret :", secret)
-
-	//totp := gotp.NewDefaultTOTP(secret)
-
-	//currentOtp := totp.Now()
-
-	/*fmt.Println("current otp :-> ", currentOtp)
-	VerifyTotp(secret, "12345")*/ // testinggggggggg , change in prod.
-
-	// Get JWT secret from environment - SAME as middleware
+	// Get JWT secret from environment
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		log.Printf("JWT_SECRET not found in environment")
@@ -93,8 +74,7 @@ func PatientLogin(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":    patient.ID,
 		"patient_id": patient.PatientId,
-
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"exp":        time.Now().Add(time.Hour * 24).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(jwtSecret))
@@ -104,7 +84,7 @@ func PatientLogin(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Token generated successfully for user: %s", credentials.Phone)
+	log.Printf("Token generated successfully for user: %s (ID: %d)", credentials.Phone, patient.ID)
 
 	c.JSON(http.StatusOK, gin.H{
 		"token": tokenString,

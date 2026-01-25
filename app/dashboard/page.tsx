@@ -5,10 +5,11 @@ import { containerVariants, itemVariants } from "../../lib/animation";
 import { 
   Sparkles, Activity, Clock, Plus, Trash2, Bell, BellOff, 
   User, UploadCloud, FileText, AlertTriangle, Eye, EyeOff, 
-  QrCode, X, Share2, ShieldCheck, CalendarDays, RefreshCw, CheckCircle2, File
+  QrCode, X, Share2, ShieldCheck, CalendarDays, RefreshCw, CheckCircle2, File, Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { analyzeMedicalRecords, type MedicalRecordAnalysis } from "../../lib/gemini";
+import { generateQRCode, getMyQRTokens, revokeQRToken, type QRToken } from "../../lib/api";
 
 // --- WRAPPER COMPONENT ---
 export default function DashboardPage() {
@@ -31,6 +32,15 @@ function PatientDashboardContent() {
   const [showQR, setShowQR] = useState(false);
   const [newMedName, setNewMedName] = useState("");
   const [newMedTime, setNewMedTime] = useState("");
+
+  // QR Code State
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [qrToken, setQrToken] = useState<string | null>(null);
+  const [qrExpiresAt, setQrExpiresAt] = useState<string | null>(null);
+  const [qrError, setQrError] = useState<string | null>(null);
+  const [qrDuration, setQrDuration] = useState(15);
+  const [qrAccessLevel, setQrAccessLevel] = useState<"BASIC" | "FULL">("FULL");
 
   // Gemini Analysis State
   const [showAIAnalysis, setShowAIAnalysis] = useState(false); // Controls AI Analysis Visibility
@@ -137,6 +147,49 @@ function PatientDashboardContent() {
     setNewMedTime("");
   };
 
+  // --- LOGIC: GENERATE QR CODE ---
+  const handleGenerateQR = async () => {
+    setQrLoading(true);
+    setQrError(null);
+    setQrCode(null);
+
+    try {
+      const response = await generateQRCode(qrDuration, qrAccessLevel);
+
+      if (response.success && response.data) {
+        setQrCode(response.data.qr_code);
+        setQrToken(response.data.token);
+        setQrExpiresAt(response.data.expires_at);
+      } else {
+        setQrError(response.error || "Failed to generate QR code");
+      }
+    } catch (err) {
+      setQrError("Error generating QR code. Please try again.");
+      console.error(err);
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  // Generate QR when modal opens
+  useEffect(() => {
+    if (showQR && !qrCode && !qrLoading) {
+      handleGenerateQR();
+    }
+  }, [showQR]);
+
+  // Calculate time remaining
+  const getTimeRemaining = () => {
+    if (!qrExpiresAt) return null;
+    const now = new Date();
+    const expiry = new Date(qrExpiresAt);
+    const diff = expiry.getTime() - now.getTime();
+    if (diff <= 0) return "Expired";
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    return `${mins}m ${secs}s`;
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 relative selection:bg-blue-100 selection:text-blue-900">
       
@@ -178,7 +231,7 @@ function PatientDashboardContent() {
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
-            onClick={() => setShowQR(false)}
+            onClick={() => { setShowQR(false); setQrCode(null); setQrError(null); }}
           >
             <motion.div 
               initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
@@ -186,16 +239,100 @@ function PatientDashboardContent() {
               className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative"
             >
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white text-center relative">
-                <button onClick={() => setShowQR(false)} className="absolute top-4 right-4 p-1 bg-white/20 hover:bg-white/30 rounded-full transition"><X size={20} /></button>
+                <button onClick={() => { setShowQR(false); setQrCode(null); setQrError(null); }} className="absolute top-4 right-4 p-1 bg-white/20 hover:bg-white/30 rounded-full transition"><X size={20} /></button>
                 <div className="inline-flex p-3 bg-white/10 rounded-full mb-3 backdrop-blur-md border border-white/20"><ShieldCheck size={32} /></div>
-                <h2 className="text-xl font-bold">Patient Health Card</h2>
-                <p className="text-blue-100 text-sm opacity-90">National Health Authority</p>
+                <h2 className="text-xl font-bold">Temporary Access QR</h2>
+                <p className="text-blue-100 text-sm opacity-90">Doctor can scan to view your records</p>
               </div>
-              <div className="p-8 flex flex-col items-center text-center">
-                <div className="bg-white p-4 rounded-2xl border-2 border-dashed border-slate-200 shadow-sm mb-6"><QrCode size={180} className="text-slate-900" /></div>
-                <h3 className="text-2xl font-bold text-slate-800">{patientName}</h3>
-                <p className="text-slate-500 font-mono mt-1 mb-6 text-lg">91-2345-6789-12</p>
-                <button className="w-full py-3 flex items-center justify-center gap-2 text-blue-600 font-bold hover:bg-blue-50 rounded-xl transition"><Share2 size={18} /> Share Card</button>
+              
+              <div className="p-6 flex flex-col items-center text-center">
+                {/* QR Code Display */}
+                <div className="bg-white p-4 rounded-2xl border-2 border-dashed border-slate-200 shadow-sm mb-4 min-h-[200px] flex items-center justify-center">
+                  {qrLoading ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 size={48} className="text-blue-600 animate-spin" />
+                      <p className="text-sm text-slate-500">Generating secure QR...</p>
+                    </div>
+                  ) : qrError ? (
+                    <div className="flex flex-col items-center gap-3 text-red-500">
+                      <AlertTriangle size={48} />
+                      <p className="text-sm">{qrError}</p>
+                    </div>
+                  ) : qrCode ? (
+                    <img 
+                      src={`data:image/png;base64,${qrCode}`} 
+                      alt="Patient QR Code" 
+                      className="w-48 h-48 object-contain"
+                    />
+                  ) : (
+                    <QrCode size={180} className="text-slate-300" />
+                  )}
+                </div>
+
+                {/* Patient Info */}
+                <h3 className="text-xl font-bold text-slate-800">{patientName}</h3>
+                
+                {/* QR Status */}
+                {qrCode && qrExpiresAt && (
+                  <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+                    <Clock size={16} className="text-blue-500" />
+                    <span>Expires: {getTimeRemaining()}</span>
+                  </div>
+                )}
+
+                {/* Access Level Badge */}
+                {qrCode && (
+                  <div className={`mt-2 px-3 py-1 rounded-full text-xs font-bold ${qrAccessLevel === 'FULL' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                    {qrAccessLevel} Access
+                  </div>
+                )}
+
+                {/* Settings */}
+                <div className="w-full mt-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm text-slate-600 w-24">Duration:</label>
+                    <select 
+                      value={qrDuration}
+                      onChange={(e) => setQrDuration(Number(e.target.value))}
+                      className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value={5}>5 minutes</option>
+                      <option value={15}>15 minutes</option>
+                      <option value={30}>30 minutes</option>
+                      <option value={60}>1 hour</option>
+                    </select>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm text-slate-600 w-24">Access:</label>
+                    <select 
+                      value={qrAccessLevel}
+                      onChange={(e) => setQrAccessLevel(e.target.value as "BASIC" | "FULL")}
+                      className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="BASIC">Basic (Summary only)</option>
+                      <option value="FULL">Full (All records)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Generate New Button */}
+                <button 
+                  onClick={handleGenerateQR}
+                  disabled={qrLoading}
+                  className="w-full mt-6 py-3 flex items-center justify-center gap-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {qrLoading ? (
+                    <><Loader2 size={18} className="animate-spin" /> Generating...</>
+                  ) : (
+                    <><RefreshCw size={18} /> Generate New QR</>
+                  )}
+                </button>
+
+                <p className="mt-4 text-xs text-slate-400">
+                  QR code grants temporary access to your medical records. 
+                  Only share with trusted healthcare providers.
+                </p>
               </div>
             </motion.div>
           </motion.div>
